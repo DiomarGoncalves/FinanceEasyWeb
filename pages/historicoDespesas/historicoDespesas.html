@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Despesas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+     <!-- pwa -->
+     <link rel="android-chrome" sizes="512x512" href="../pwa/android-chrome-512x512.png">
+     <link rel="apple-touch-icon" sizes="180x180" href="../pwa/apple-touch-icon.png">
+     <link rel="icon" type="image/png" sizes="32x32" href="../pwa/favicon-32x32.png">
+     <link rel="icon" type="image/png" sizes="16x16" href="../pwa/favicon-16x16.png">
+     <link rel="shortcut icon" href="../pwa/favicon.ico" type="image/x-icon">
+     <link rel="manifest" href="/pages/pwa/manifest.json">
+     <meta name="theme-color" content="#4CAF50">
+     <link rel="icon" href="/assets/icons/icon-192x192.png">
+     <script>
+       if ("serviceWorker" in navigator) {
+         navigator.serviceWorker.register("/pages/pwa/service-worker.js")
+           .then(() => console.log("Service Worker registrado com sucesso."))
+           .catch((error) => console.error("Erro ao registrar o Service Worker:", error));
+       }
+     </script>
+     <link rel="stylesheet" href="../css/style.css">
+     <!-- pwa -->
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex">
+    <header>
+        <nav class="sidebar" id="sidebar">
+                        <a href="/pages/home/home.html"><h2 class="text-purple-300 text-xl font-bold mb-4">FinancEasy</h2></a>
+            <a href="/pages/cartao/cartoes.html">💳 Cartões</a>
+            <div class="dropdown">
+            <a href="#" class="text-white">📊 Transações</a>
+            <div class="dropdown-content">
+                <a href="/pages/despesas/despesas.html">📉 Despesas</a>
+                <a href="/pages/receitas/receitas.html">📈 Receitas</a>
+            </div>
+            </div>
+            <div class="dropdown">
+            <a href="#" class="text-white">📊 Históricos</a>
+            <div class="dropdown-content">
+                <a href="/pages/historicoComissões/historicoComissões.html">📉Historico de Comissões</a>
+                <a href="/pages/historicoDespesas/historicoDespesas.html">📈 Historico de Despesas</a>
+                <a href="/pages/historicoReceitas/historicoReceitas.html">📈 Historico de Receitas</a>
+            </div>
+            </div>
+            <a href="/pages/investimentos/investimentos.html">📊 Investimentos</a>
+            <a href="/pages/comissao/comissao.html">💰 Comissões</a>
+            <a href="/pages/reservas/reservas.html">🏦 Reservas</a>
+            <a href="/pages/relatorios/relatorios.html">📋 Relatórios</a>
+            <a href="/pages/loginC/loginConfig.html">⚙️ Configuração</a>
+        </nav>
+    
+      <button class="menu-toggle" id="menuToggle">☰</button>    
+    </header>
+
+    <main class="main-content">
+        <h1 class="text-3xl font-bold mb-6">📜 Histórico de Despesas</h1>
+        <button
+        class="btn bg-purple-600 hover:bg-purple-500 text-white p-1 mobile rounded-lg mb-3 inline-block"
+        id="exportar"
+        >
+            📄 Exportar para PDF
+        </button>
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+            <h2 class="text-2xl font-bold mb-4">🔍 Filtrar Histórico</h2>
+            <form id="filtroForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="mes" class="block text-lg">📅 mes</label>
+                        <input type="month" id="mes" class="form-input bg-gray-700 text-white w-full p-3 rounded-lg">
+                    </div>
+                </div>
+                <button type="submit" id="filtrar" class="btn bg-purple-600 hover:bg-purple-500 text-white p-3 rounded-lg">
+                    🔍 Filtrar
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-6 bg-gray-800 p-6 rounded-2xl shadow-lg">
+            <h2 class="text-2xl font-bold mb-4">📋 Resultados</h2>
+            <div class="table-responsive">
+                <table class="table-auto w-full text-white" id="historicoTable">
+                    <thead class="bg-gray-700">
+                        <tr>
+                            <th class="p-2">Estabelecimento</th>
+                            <th class="p-2">Data</th>
+                            <th class="p-2">Valor</th>
+                            <th class="p-2 hide-mobile">Forma de Pagamento</th>
+                            <th class="p-2 hide-mobile">Número de Parcelas</th>
+                            <th class="p-2 hide-mobile">Parcelas Restantes</th>
+                            <th class="p-2">Data Pagamento</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historicoTableBody">
+                        <h1 id="totalGasto"></h1>
+                        <!-- Linhas dinâmicas -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <script src="script.js"></script>
+    <script src="../js/script.js"></script>
+</body>
+</html>

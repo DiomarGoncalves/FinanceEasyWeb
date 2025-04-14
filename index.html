@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/style.css">
+    <title>FinancEasy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  </head>
+  <body class="bg-gray-900 text-white min-h-screen flex flex-col">
+    <nav class="bg-gray-800 p-4 shadow-lg">
+      <div class="container mx-auto flex justify-between items-center">
+        <a class="text-purple-500 text-2xl font-bold flex items-center gap-2" href="#">
+          <i class="ph ph-wallet text-purple-400 text-3xl"></i>
+          FinancEasy
+        </a>
+        <div class="space-x-6 flex items-center">
+          <a class="flex items-center gap-1 mobile text-white hover:text-purple-400 transition" href="#funcionalidades">
+            <i class="ph ph-list"></i> Funcionalidades
+          </a>
+          <a class="flex items-center gap-1 mobile text-white hover:text-purple-400 transition" href="#capturas">
+            <i class="ph ph-image"></i> Capturas
+          </a>
+          <a class="flex items-center gap-1 mobile text-white hover:text-purple-400 transition" href="#versoes">
+            <i class="ph ph-download"></i> Downloads
+          </a>
+          <a class="flex items-center gap-1 mobile text-white hover:text-purple-400 transition" href="#autor">
+            <i class="ph ph-user"></i> Autor
+          </a>
+          <a class="flex items-center gap-1 mobile text-white hover:text-purple-400 transition" href="#licenca">
+            <i class="ph ph-file-text"></i> Licença
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="bg-gray-800 py-16 text-center shadow-lg">
+      <div class="container mx-auto">
+        <img src="assets/icon.png" alt="FinancEasy" class="mx-auto w-32 mb-6" />
+        <h1 class="text-5xl font-bold text-purple-500 mb-4">FinancEasy</h1>
+        <p class="text-lg">Gerencie suas finanças pessoais de forma fácil e intuitiva.</p>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-10 space-y-16">
+      <section id="funcionalidades" class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+        <h2 class="text-3xl font-semibold text-purple-500 mb-4 flex items-center gap-2">
+          <i class="ph ph-gear"></i> Funcionalidades
+        </h2>
+        <ul class="list-disc pl-6 space-y-2 text-lg">
+          <li class="flex items-center gap-2"><i class="ph ph-trend-up text-purple-400"></i> Controle de despesas e receitas</li>
+          <li class="flex items-center gap-2"><i class="ph ph-chart-bar text-purple-400"></i> Geração de relatórios detalhados</li>
+          <li class="flex items-center gap-2"><i class="ph ph-wallet text-purple-400"></i> Cálculo do saldo atual</li>
+          <li class="flex items-center gap-2"><i class="ph ph-smiley text-purple-400"></i> Interface amigável e intuitiva</li>
+        </ul>
+      </section>
+
+      <section id="capturas" class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+        <h2 class="text-3xl font-semibold text-purple-500 mb-6 flex items-center gap-2">
+          <i class="ph ph-image"></i> Capturas de Tela
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-xl font-medium mb-2 flex items-center gap-2"><i class="ph ph-monitor"></i> Tela Principal</h3>
+            <img src="assets/tela-principal.png" alt="Tela Principal" class="rounded-lg shadow-md" />
+          </div>
+          <div>
+            <h3 class="text-xl font-medium mb-2 flex items-center gap-2"><i class="ph ph-file-chart"></i> Relatórios</h3>
+            <img src="assets/relatorios.png" alt="Relatórios" class="rounded-lg shadow-md" />
+          </div>
+        </div>
+      </section>
+
+      <section id="versoes" class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+        <h2 class="text-3xl font-semibold text-purple-500 mb-4 flex items-center gap-2">
+          <i class="ph ph-download-simple"></i> Versões Disponíveis
+        </h2>
+        <ul class="list-disc pl-6 space-y-2 text-lg">
+          <li><a href="#" class="text-purple-400 hover:underline flex items-center gap-2"><i class="ph ph-windows-logo"></i> Windows - Versão 0.0.1 - alpha</a></li>
+          <li><a href="#" class="text-purple-400 hover:underline flex items-center gap-2"><i class="ph ph-windows-logo"></i> Windows - Versão 0.0.2 - alpha</a></li>
+          <li><a href="#" class="text-purple-400 hover:underline flex items-center gap-2"><i class="ph ph-apple-logo"></i> macOS</a></li>
+          <li><a href="#" class="text-purple-400 hover:underline flex items-center gap-2"><i class="ph ph-linux-logo"></i> Linux</a></li>
+          <li><a href="pages/home/home.html" class="text-purple-400 hover:underline flex items-center gap-2"><i class="ph ph-play"></i> Versão Demo</a></li>
+        </ul>
+      </section>
+
+      <section id="autor" class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+        <h2 class="text-3xl font-semibold text-purple-500 mb-4 flex items-center gap-2">
+          <i class="ph ph-user"></i> Autor
+        </h2>
+        <p>Desenvolvido por <a href="https://github.com/DiomarGoncalves" class="text-purple-400 hover:underline flex items-center gap-2"><i class="ph ph-github-logo"></i> Diomar Gonçalves</a>.</p>
+      </section>
+
+      <section id="licenca" class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+        <h2 class="text-3xl font-semibold text-purple-500 mb-4 flex items-center gap-2">
+          <i class="ph ph-lock"></i> Licença
+        </h2>
+        <p>Este projeto está licenciado sob a licença MIT. Veja o arquivo <a href="LICENSE" class="text-purple-400 hover:underline flex items-center gap-2"><i class="ph ph-file"></i> LICENSE</a> para mais detalhes.</p>
+      </section>
+    </main>
+
+    <footer class="bg-gray-800 py-6 text-center shadow-lg">
+      <p class="text-gray-400 flex items-center justify-center gap-2">
+        <i class="ph ph-copyright"></i> 2025 FinancEasy. Todos os direitos reservados.
+      </p>
+    </footer>
+  </body>
+</html>
