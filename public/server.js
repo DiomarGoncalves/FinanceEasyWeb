@@ -1,3 +1,4 @@
+require("dotenv").config(); // Carregar variáveis de ambiente do .env
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
@@ -68,7 +69,7 @@ app.get("/pages/home/home.html", protegerRota, (req, res) => {
 
 // Redirecionar a rota raiz para a página de login
 app.get("/", (req, res) => {
-    res.redirect("/login");
+    res.redirect("/login"); // Redirecionar para a página de login
 });
 
 // Rota para corrigir problemas de caminhos

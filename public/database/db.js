@@ -3,8 +3,8 @@ const { Pool } = require('pg');
 
 // Configuração do banco de dados PostgreSQL (Neon)
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://FinancEasyWeb_owner:npg_su5NWb1AGnZr@ep-tiny-pine-a4tdvgyi-pooler.us-east-1.aws.neon.tech/FinancEasyWeb?sslmode=require',
-    ssl: { rejectUnauthorized: false } // Necessário para conexões seguras
+    connectionString: process.env.DATABASE_URL, // URL do banco de dados Neon
+    ssl: { rejectUnauthorized: false } // Necessário para conexões seguras com Neon
 });
 
 // Função para executar queries
