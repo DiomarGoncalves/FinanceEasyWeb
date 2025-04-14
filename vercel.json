@@ -9,6 +9,7 @@
     { "src": "/login", "dest": "/public/pages/login/login.html" },
     { "src": "/cadastro", "dest": "/public/pages/cadastro/cadastro.html" },
     { "src": "/", "dest": "/public/pages/home/home.html" },
+    { "src": "/pages/(.*)", "dest": "/public/pages/$1" },
     { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
