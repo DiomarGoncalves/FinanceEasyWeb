@@ -45,34 +45,30 @@ const routersPath = path.join(__dirname, "routers");
 fs.readdirSync(routersPath).forEach((file) => {
     if (file.endsWith(".js")) {
         const route = require(`./routers/${file}`);
-        app.use(`/api/${file.replace(".js", "")}`, route);
+        app.use(`/api/${file.replace(".js", "")}`, route); // Registrar a rota
     }
 });
 
-// Rota de login
+// Rotas de páginas
 app.get("/login", (req, res) => {
     const filePath = path.join(__dirname, "pages/usuarios/login/login.html");
     res.sendFile(filePath);
 });
 
-// Rota para a página de cadastro (não protegida)
 app.get("/cadastro", (req, res) => {
     const filePath = path.join(__dirname, "pages/usuarios/cadastros/cadastro.html");
     res.sendFile(filePath);
 });
 
-// Proteger a página inicial
 app.get("/pages/home/home.html", protegerRota, (req, res) => {
     const filePath = path.join(__dirname, "pages/home/home.html");
     res.sendFile(filePath);
 });
 
-// Redirecionar a rota raiz para a página de login
 app.get("/", (req, res) => {
-    res.redirect("/login"); // Redirecionar para a página de login
+    res.redirect("/login");
 });
 
-// Rota para corrigir problemas de caminhos
 app.get("*", (req, res) => {
     res.redirect("/login");
 });
@@ -106,6 +102,35 @@ app.post("/api/usuarios/registro", async (req, res) => {
     } catch (error) {
         console.error("Erro ao registrar usuário:", error);
         res.status(500).json({ error: "Erro ao registrar usuário" });
+    }
+});
+
+// Rota para login de usuários
+app.post("/api/usuarios/login", async (req, res) => {
+    const { email, senha } = req.body;
+
+    if (!email || !senha) {
+        return res.status(400).json({ error: "Todos os campos são obrigatórios" });
+    }
+
+    try {
+        const result = await db.query("SELECT * FROM usuarios WHERE email = $1", [email]);
+        const user = result.rows[0];
+
+        if (!user) {
+            return res.status(401).json({ error: "Usuário não encontrado" });
+        }
+
+        const isPasswordValid = await bcrypt.compare(senha, user.senha);
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: "Senha incorreta" });
+        }
+
+        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
+        res.json({ message: "Login bem-sucedido", token });
+    } catch (error) {
+        console.error("Erro ao fazer login:", error);
+        res.status(500).json({ error: "Erro ao fazer login" });
     }
 });
 
