@@ -10,6 +10,14 @@ const JWT_SECRET = process.env.JWT_SECRET || "secreta";
 // Middleware para JSON
 app.use(express.json());
 
+// Middleware para evitar exposição de variáveis sensíveis
+app.use((req, res, next) => {
+    if (req.url.includes('DATABASE_URL')) {
+        return res.status(403).json({ error: "Acesso proibido" });
+    }
+    next();
+});
+
 // Servir arquivos estáticos da pasta "pages"
 app.use("/pages", express.static(path.join(__dirname, "../pages")));
 
