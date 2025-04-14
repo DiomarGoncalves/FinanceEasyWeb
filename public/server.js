@@ -113,6 +113,12 @@ app.get("/pages/:folder/:file", (req, res) => {
     }
 });
 
+// Rota de login
+app.get("/login", (req, res) => {
+    const filePath = path.join(__dirname, "../pages/login/login.html");
+    res.sendFile(filePath);
+});
+
 // Proteger a página inicial
 app.get("/pages/home/home.html", protegerRota, (req, res) => {
     const filePath = path.join(__dirname, "../pages/home/home.html");

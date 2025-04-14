@@ -6,8 +6,8 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "public/server.js" },
-    { "src": "/login", "dest": "/public/pages/login/login.html" },
-    { "src": "/cadastro", "dest": "/public/pages/cadastro/cadastro.html" },
+    { "src": "/login", "dest": "/public/pages/usuarios/login/login.html" },
+    { "src": "/cadastro", "dest": "/public/pages/usuarios/cadastros/cadastro.html" },
     { "src": "/", "dest": "/login" },
     { "src": "/pages/(.*)", "dest": "/public/pages/$1" },
     { "src": "/(.*)", "dest": "/public/$1" }
