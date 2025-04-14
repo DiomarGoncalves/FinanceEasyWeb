@@ -65,8 +65,9 @@ app.get("/pages/home/home.html", protegerRota, (req, res) => {
     res.sendFile(filePath);
 });
 
+// Redirecionar a rota raiz para a página de login
 app.get("/", (req, res) => {
-    res.redirect("/login");
+    res.redirect("/login"); // Certifique-se de que o redirecionamento está correto
 });
 
 app.get("*", (req, res) => {
