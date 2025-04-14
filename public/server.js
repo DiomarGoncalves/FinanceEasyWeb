@@ -77,6 +77,38 @@ app.get("*", (req, res) => {
     res.redirect("/login");
 });
 
+// Exemplo de rota para listar cartões
+app.get("/api/cartoes", async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM cartoes");
+        res.json(result.rows); // Retornar os cartões como JSON
+    } catch (error) {
+        console.error("Erro ao buscar cartões:", error);
+        res.status(500).json({ error: "Erro ao buscar cartões" }); // Retornar erro como JSON
+    }
+});
+
+// Rota para registrar usuários
+app.post("/api/usuarios/registro", async (req, res) => {
+    const { nome, email, senha } = req.body;
+
+    if (!nome || !email || !senha) {
+        return res.status(400).json({ error: "Todos os campos são obrigatórios" });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(senha, 10);
+        await db.query(
+            "INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3)",
+            [nome, email, hashedPassword]
+        );
+        res.status(201).json({ message: "Usuário registrado com sucesso" });
+    } catch (error) {
+        console.error("Erro ao registrar usuário:", error);
+        res.status(500).json({ error: "Erro ao registrar usuário" });
+    }
+});
+
 // Configuração para rodar localmente
 const PORT = process.env.PORT || 3000;
 

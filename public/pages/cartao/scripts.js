@@ -68,6 +68,10 @@ async function registrarCompra(cartaoId, valor, descricao, parcelas = 1) {
 async function loadCartoes() {
   try {
     const response = await fetch("/api/cartoes");
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status} - ${response.statusText}`);
+    }
+
     const cartoes = await response.json();
     const tableBody = document.querySelector("#cartoesTable tbody");
     tableBody.innerHTML = "";
@@ -145,26 +149,29 @@ document.getElementById("editCartaoForm").addEventListener("submit", async (even
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadCartoes();
-
   const cartoesTable = document.querySelector("#cartoesTable");
   const cartaoForm = document.querySelector("#cartaoForm");
 
-  // Adicionar cartão
-  cartaoForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const nome = document.querySelector("#nome").value;
-    const banco = document.querySelector("#banco").value;
+  // Verificar se os elementos existem antes de adicionar eventos
+  if (cartaoForm) {
+    cartaoForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const nome = document.querySelector("#nome").value;
+      const banco = document.querySelector("#banco").value;
 
-    if (nome && banco) {
-      const novaLinha = `
-        <tr>
-          <td>${nome}</td>
-          <td>${banco}</td>
-        </tr>
-      `;
-      cartoesTable.querySelector("tbody").insertAdjacentHTML("beforeend", novaLinha);
-      cartaoForm.reset();
-    }
-  });
+      if (nome && banco) {
+        const novaLinha = `
+          <tr>
+            <td>${nome}</td>
+            <td>${banco}</td>
+          </tr>
+        `;
+        cartoesTable.querySelector("tbody").insertAdjacentHTML("beforeend", novaLinha);
+        cartaoForm.reset();
+      }
+    });
+  }
+
+  // Carregar cartões
+  loadCartoes();
 });
