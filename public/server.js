@@ -19,6 +19,22 @@ app.use((req, res, next) => {
     next();
 });
 
+// Middleware para autenticação de páginas protegidas
+function protegerRota(req, res, next) {
+    const token = req.cookies?.token; // Supondo que o token seja armazenado em cookies
+    if (!token) {
+        return res.redirect("/login"); // Redirecionar para a página de login
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.redirect("/login"); // Redirecionar para a página de login
+        }
+        req.user = user;
+        next();
+    });
+}
+
 // Servir arquivos estáticos da pasta "pages"
 app.use("/pages", express.static(path.join(__dirname, "../pages")));
 
@@ -63,7 +79,8 @@ app.post("/api/usuarios/login", async (req, res) => {
         }
 
         const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
-        res.json({ token });
+        res.cookie("token", token, { httpOnly: true }); // Armazenar o token em cookies
+        res.json({ message: "Login bem-sucedido" });
     } catch (error) {
         res.status(500).json({ error: "Erro ao fazer login" });
     }
@@ -96,10 +113,20 @@ app.get("/pages/:folder/:file", (req, res) => {
     }
 });
 
-// Rota para corrigir problemas de caminhos
-app.get("*", (req, res) => {
+// Proteger a página inicial
+app.get("/pages/home/home.html", protegerRota, (req, res) => {
     const filePath = path.join(__dirname, "../pages/home/home.html");
     res.sendFile(filePath);
+});
+
+// Redirecionar a rota raiz para a página de login
+app.get("/", (req, res) => {
+    res.redirect("/login");
+});
+
+// Rota para corrigir problemas de caminhos
+app.get("*", (req, res) => {
+    res.redirect("/login"); // Redirecionar para a página de login por padrão
 });
 
 // Exportar o app para ser usado pela Vercel
