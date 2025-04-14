@@ -1,18 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../database/db.js");
+const db = require("../database/db");
 
 // Rota para listar cartões
-router.get("/", (req, res) => {
-  const sql = `SELECT * FROM cartoes`;
-  db.all(sql, [], (err, rows) => {
-    if (err) {
-      console.error("Erro ao buscar cartões:", err);
-      res.status(500).json({ error: "Erro ao buscar cartões" });
-    } else {
-      res.json(rows);
+router.get("/", async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM cartoes");
+        res.json(result.rows); // Retornar os cartões como JSON
+    } catch (error) {
+        console.error("Erro ao buscar cartões:", error);
+        res.status(500).json({ error: "Erro ao buscar cartões" });
     }
-  });
 });
 
 // Rota para adicionar um cartão

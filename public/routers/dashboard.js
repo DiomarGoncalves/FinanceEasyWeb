@@ -35,17 +35,17 @@ router.get("/", async (req, res) => {
     `;
 
     const [saldo, despesas, receitas, comparativo] = await Promise.all([
-      db.getAsync(saldoQuery, [mesFormatado, anoAtual, mesFormatado, anoAtual]),
-      db.getAsync(despesasQuery, [mesFormatado, anoAtual]),
-      db.getAsync(receitasQuery, [mesFormatado, anoAtual]),
-      db.getAsync(comparativoQuery, [mesAnteriorFormatado, anoAnterior, mesAnteriorFormatado, anoAnterior]),
+      db.query(saldoQuery, [mesFormatado, anoAtual, mesFormatado, anoAtual]),
+      db.query(despesasQuery, [mesFormatado, anoAtual]),
+      db.query(receitasQuery, [mesFormatado, anoAtual]),
+      db.query(comparativoQuery, [mesAnteriorFormatado, anoAnterior, mesAnteriorFormatado, anoAnterior]),
     ]);
 
     res.json({
-      saldoAtual: saldo?.saldoAtual || 0,
-      totalDespesas: despesas?.totalDespesas || 0,
-      totalReceitas: receitas?.totalReceitas || 0,
-      comparativoMesAnterior: comparativo?.saldoAnterior || 0,
+      saldoAtual: saldo?.rows[0]?.saldoAtual || 0,
+      totalDespesas: despesas?.rows[0]?.totalDespesas || 0,
+      totalReceitas: receitas?.rows[0]?.totalReceitas || 0,
+      comparativoMesAnterior: comparativo?.rows[0]?.saldoAnterior || 0,
     });
   } catch (error) {
     console.error("Erro ao obter dados do dashboard:", error);
@@ -95,22 +95,22 @@ router.get("/mensal", async (req, res) => {
     `;
 
     const [saldo, despesas, receitas, desempenho] = await Promise.all([
-      db.getAsync(saldoQuery, [mesFormatado, ano, mesFormatado, ano]),
-      db.getAsync(despesasQuery, [mesFormatado, ano]),
-      db.getAsync(receitasQuery, [mesFormatado, ano]),
-      db.allAsync(desempenhoQuery, [ano]),
+      db.query(saldoQuery, [mesFormatado, ano, mesFormatado, ano]),
+      db.query(despesasQuery, [mesFormatado, ano]),
+      db.query(receitasQuery, [mesFormatado, ano]),
+      db.query(desempenhoQuery, [ano]),
     ]);
 
     const desempenhoMensal = {
-      meses: desempenho.map((d) => d.mes),
-      despesas: desempenho.map((d) => d.despesas),
-      receitas: desempenho.map((d) => d.receitas),
+      meses: desempenho.rows.map((d) => d.mes),
+      despesas: desempenho.rows.map((d) => d.despesas),
+      receitas: desempenho.rows.map((d) => d.receitas),
     };
 
     res.json({
-      saldoAtual: saldo?.saldoAtual || 0,
-      totalDespesas: despesas?.totalDespesas || 0,
-      totalReceitas: receitas?.totalReceitas || 0,
+      saldoAtual: saldo?.rows[0]?.saldoAtual || 0,
+      totalDespesas: despesas?.rows[0]?.totalDespesas || 0,
+      totalReceitas: receitas?.rows[0]?.totalReceitas || 0,
       desempenhoMensal: desempenhoMensal.meses.length ? desempenhoMensal : { meses: [], despesas: [], receitas: [] },
     });
   } catch (error) {
