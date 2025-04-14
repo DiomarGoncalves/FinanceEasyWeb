@@ -44,8 +44,7 @@ const routersPath = path.join(__dirname, "routers");
 fs.readdirSync(routersPath).forEach((file) => {
     if (file.endsWith(".js")) {
         const route = require(`./routers/${file}`);
-        const routeName = file.replace(".js", "");
-        app.use(`/api/${routeName}`, route);
+        app.use(`/api/${file.replace(".js", "")}`, route);
     }
 });
 
