@@ -62,20 +62,41 @@ document.getElementById("cartaoForm").addEventListener("submit", async (event) =
     vencimento: document.getElementById("vencimento").value,
   };
 
+  const token = localStorage.getItem("token");
+  if (!token) {
+    showMessage("Usuário não autenticado. Faça login novamente.", "error");
+    return;
+  }
+
+  // Validação do formato da data (YYYY-MM-DD)
+  const vencimentoRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!cartao.nome || !cartao.banco || isNaN(cartao.limite) || !vencimentoRegex.test(cartao.vencimento)) {
+    showMessage("Todos os campos são obrigatórios e 'vencimento' deve estar no formato 'YYYY-MM-DD'", "error");
+    return;
+  }
+
   try {
     const response = await fetch("/api/cartoes/", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(cartao),
     });
-    if (response.ok) {
-      showMessage("Cartão adicionado com sucesso!", "success");
-      resetFormAndUnlockInputs(event.target);
-    } else {
-      throw new Error("Erro ao adicionar cartão");
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Erro ao adicionar cartão:", errorData);
+      throw new Error(errorData.error || "Erro ao adicionar cartão");
     }
+
+    const data = await response.json();
+    console.log("Cartão adicionado com sucesso:", data);
+    showMessage("Cartão adicionado com sucesso!", "success");
+    resetFormAndUnlockInputs(event.target);
   } catch (error) {
     console.error(`Erro ao adicionar cartão: ${error.message}`);
-    showMessage(`Erro ao adicionar cartão: ${error.message}`, "danger");
+    showMessage(`Erro ao adicionar cartão: ${error.message}`, "error");
   }
 });

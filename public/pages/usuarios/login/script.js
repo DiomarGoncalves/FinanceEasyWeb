@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (response.ok) {
                     const data = await response.json();
-                    localStorage.setItem("token", data.token);
+                    localStorage.setItem("token", data.token); // Armazenar o token no localStorage
                     alert("Login realizado com sucesso!");
                     window.location.href = "/pages/home/home.html"; // Redirecionar para a página inicial
                 } else {

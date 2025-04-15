@@ -12,6 +12,15 @@ const JWT_SECRET = process.env.JWT_SECRET || "secreta";
 // Middleware para JSON
 app.use(express.json());
 
+// Middleware para registrar todas as solicitações e respostas
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  res.on("finish", () => {
+    console.log(`[${new Date().toISOString()}] Resposta: ${res.statusCode}`);
+  });
+  next();
+});
+
 // Middleware para evitar exposição de variáveis sensíveis
 app.use((req, res, next) => {
     if (req.url.includes('DATABASE_URL')) {

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const db = require("../database/db");
+const db = require("../../database/db");
 const JWT_SECRET = process.env.JWT_SECRET || "secreta";
 
 // Middleware para verificar autenticação

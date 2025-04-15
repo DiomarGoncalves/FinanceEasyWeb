@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../database/db.js");
+const db = require("../../database/db.js");
 
 // Rota para listar histórico de despesas
 router.get("/despesas", (req, res) => {
