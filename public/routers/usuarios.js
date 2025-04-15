@@ -5,6 +5,22 @@ const jwt = require("jsonwebtoken");
 const db = require("../database/db");
 const JWT_SECRET = process.env.JWT_SECRET || "secreta";
 
+// Middleware para verificar autenticação
+const autenticar = (req, res, next) => {
+  const token = req.headers["authorization"];
+  if (!token) {
+    return res.status(401).json({ error: "Token não fornecido" });
+  }
+
+  try {
+    const decoded = jwt.verify(token.split(" ")[1], JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: "Token inválido" });
+  }
+};
+
 // Rota para registrar usuários
 router.post("/registro", async (req, res) => {
     const { nome, email, senha } = req.body;
@@ -53,6 +69,17 @@ router.post("/login", async (req, res) => {
         console.error("Erro ao fazer login:", error);
         res.status(500).json({ error: "Erro ao fazer login" });
     }
+});
+
+// Exemplo de rota protegida
+router.get("/perfil", autenticar, async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM usuarios WHERE id = $1", [req.user.id]);
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Erro ao buscar perfil:", error);
+    res.status(500).json({ error: "Erro ao buscar perfil" });
+  }
 });
 
 module.exports = router;

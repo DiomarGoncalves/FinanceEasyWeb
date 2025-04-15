@@ -58,4 +58,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    // Exemplo de uso do token em uma requisição protegida
+    const token = localStorage.getItem("token");
+    if (token) {
+        fetch("/api/usuarios/perfil", {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((res) => res.json())
+            .then((data) => console.log("Perfil do usuário:", data))
+            .catch((err) => console.error("Erro ao buscar perfil:", err));
+    }
 });

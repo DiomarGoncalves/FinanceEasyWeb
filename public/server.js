@@ -135,6 +135,31 @@ app.post("/api/usuarios/login", async (req, res) => {
     }
 });
 
+const cors = require("cors");
+const bodyParser = require("body-parser");
+
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use("/api/usuarios", require("./routers/usuarios"));
+app.use("/api/teste", require("./routers/teste"));
+app.use("/api/reservas", require("./routers/reservas"));
+app.use("/api/receitas", require("./routers/receitas"));
+app.use("/api/objetivo", require("./routers/objetivo"));
+app.use("/api/notificacoes", require("./routers/notificacoes"));
+app.use("/api/investimentos", require("./routers/investimentos"));
+app.use("/api/historico", require("./routers/historico"));
+app.use("/api/despesas", require("./routers/despesas"));
+app.use("/api/dashboard", require("./routers/dashboard"));
+app.use("/api/configuracoes", require("./routers/configuracoes"));
+app.use("/api/comissoes", require("./routers/comissoes"));
+app.use("/api/cartoes", require("./routers/cartoes"));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "pages/usuarios/login/login.html"));
+});
+
 // Configuração para rodar localmente
 const PORT = process.env.PORT || 3000;
 
