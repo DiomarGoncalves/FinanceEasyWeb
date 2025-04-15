@@ -1,60 +1,80 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../../database/db.js");
+const db = require("../database/db");
+const autenticar = require("../middlewares/autenticar"); // Middleware para autenticação
 
-// Rota para listar despesas
-router.get("/", (req, res) => {
-  const sql = `
-    SELECT d.*, c.nome AS cartao_nome 
-    FROM despesas d 
-    LEFT JOIN cartoes c ON d.cartao_id = c.id
-  `;
-  db.all(sql, [], (err, rows) => {
-    if (err) {
-      console.error("Erro ao buscar despesas:", err.message);
-      res.status(500).json({ error: "Erro ao buscar despesas" });
-    } else {
-      res.json(rows);
+// Rota para listar despesas do usuário autenticado
+router.get("/", autenticar, async (req, res) => {
+    try {
+        const usuarioId = req.user.id; // Obter o ID do usuário autenticado
+        console.log("Listando despesas para o usuário:", usuarioId);
+
+        const sql = `
+            SELECT d.*, c.nome AS cartao_nome 
+            FROM despesas d 
+            LEFT JOIN cartoes c ON d.cartao_id = c.id
+            WHERE d.usuario_id = $1
+        `;
+
+        const result = await db.query(sql, [usuarioId]); // Substituir db.all por db.query
+        res.json(result.rows); // Retornar as despesas como JSON
+    } catch (error) {
+        console.error("Erro inesperado ao listar despesas:", error);
+        res.status(500).json({ error: "Erro interno do servidor" });
     }
-  });
 });
 
 // Rota para adicionar uma nova despesa
-router.post("/", (req, res) => {
-  const {
-    estabelecimento,
-    data,
-    valor,
-    forma_pagamento,
-    numero_parcelas,
-    cartao_id,
-  } = req.body;
+router.post("/", autenticar, async (req, res) => {
+    const {
+        estabelecimento,
+        data,
+        valor,
+        forma_pagamento,
+        numero_parcelas,
+        cartao_id,
+    } = req.body;
 
-  const sql = `INSERT INTO despesas (estabelecimento, data, valor, forma_pagamento, numero_parcelas, parcelas_restantes, valor_parcela, cartao_id) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-  const valorParcela = valor / numero_parcelas;
-
-  db.run(
-    sql,
-    [
-      estabelecimento,
-      data,
-      valor,
-      forma_pagamento,
-      numero_parcelas,
-      numero_parcelas,
-      valorParcela,
-      cartao_id,
-    ],
-    function (err) {
-      if (err) {
-        console.error("Erro ao adicionar despesa:", err);
-        res.status(500).json({ error: "Erro ao adicionar despesa" });
-      } else {
-        res.json({ id: this.lastID });
-      }
+    if (!estabelecimento || !data || !valor || !forma_pagamento) {
+        return res.status(400).json({ error: "Todos os campos são obrigatórios." });
     }
-  );
+
+    // Verificar campos obrigatórios para "Cartão de Crédito"
+    if (forma_pagamento === "Cartão de Crédito") {
+        if (!numero_parcelas || numero_parcelas <= 0) {
+            return res.status(400).json({ error: "Número de parcelas é obrigatório para Cartão de Crédito." });
+        }
+        if (!cartao_id) {
+            return res.status(400).json({ error: "Cartão é obrigatório para Cartão de Crédito." });
+        }
+    }
+
+    try {
+        const valorParcela = valor / (numero_parcelas || 1);
+
+        const sql = `
+            INSERT INTO despesas (estabelecimento, data, valor, forma_pagamento, numero_parcelas, parcelas_restantes, valor_parcela, cartao_id, usuario_id) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `;
+
+        const params = [
+            estabelecimento,
+            data,
+            valor,
+            forma_pagamento,
+            forma_pagamento === "Cartão de Crédito" ? numero_parcelas : 1,
+            forma_pagamento === "Cartão de Crédito" ? numero_parcelas : 1,
+            forma_pagamento === "Cartão de Crédito" ? valorParcela : valor,
+            forma_pagamento === "Cartão de Crédito" ? cartao_id : null,
+            req.user.id, // Associar a despesa ao usuário autenticado
+        ];
+
+        const result = await db.query(sql, params);
+        res.json({ id: result.rows[0]?.id || null, message: "Despesa registrada com sucesso!" });
+    } catch (error) {
+        console.error("Erro ao adicionar despesa:", error);
+        res.status(500).json({ error: "Erro ao adicionar despesa." });
+    }
 });
 
 // Rota para registrar despesas parceladas

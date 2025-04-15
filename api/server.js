@@ -4,10 +4,16 @@ const path = require("path");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const db = require("./database/db");
+const { Pool } = require("pg"); // Usar apenas pg para PostgreSQL
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || "secreta";
+
+// Configuração do banco de dados PostgreSQL
+const db = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }, // Necessário para conexões seguras no Neon
+});
 
 // Middleware para JSON
 app.use(express.json());
@@ -30,19 +36,19 @@ app.use((req, res, next) => {
 });
 
 // Servir arquivos estáticos
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "../public"))); // Corrigir o caminho para a pasta "public")
 app.use("/pages", express.static(path.join(__dirname, "../pages")));
 
 // Middleware para autenticação de páginas protegidas
 function protegerRota(req, res, next) {
-    const token = req.cookies?.token;
+    const token = req.cookies?.token || req.headers["authorization"]?.split(" ")[1];
     if (!token) {
-        return res.redirect("/login");
+        return res.status(401).json({ error: "Acesso não autorizado" });
     }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
-            return res.redirect("/login");
+            return res.status(401).json({ error: "Token inválido" });
         }
         req.user = user;
         next();
@@ -60,17 +66,17 @@ fs.readdirSync(routersPath).forEach((file) => {
 
 // Rotas de páginas
 app.get("/pages/usuarios/login/login.html", (req, res) => {
-    const filePath = path.join(__dirname, "pages/usuarios/login/login.html");
+    const filePath = path.join(__dirname, "../public/pages/usuarios/login/login.html"); // Corrigir o caminho
     res.sendFile(filePath);
 });
 
 app.get("/pages/usuarios/cadastros/cadastro.html", (req, res) => {
-    const filePath = path.join(__dirname, "pages/usuarios/cadastros/cadastro.html");
+    const filePath = path.join(__dirname, "public/pages/usuarios/cadastros/cadastro.html"); // Corrigir o caminho
     res.sendFile(filePath);
 });
 
 app.get("/pages/home/home.html", protegerRota, (req, res) => {
-    const filePath = path.join(__dirname, "pages/home/home.html");
+    const filePath = path.join(__dirname, "public/pages/home/home.html"); // Corrigir o caminho
     res.sendFile(filePath);
 });
 
@@ -83,14 +89,25 @@ app.get("*", (req, res) => {
     res.redirect("/pages/usuarios/login/login.html");
 });
 
-// Exemplo de rota para listar cartões
-app.get("/api/cartoes", async (req, res) => {
+// Exemplo de rota protegida para listar cartões
+app.get("/api/cartoes", protegerRota, async (req, res) => {
     try {
-        const result = await db.query("SELECT * FROM cartoes");
-        res.json(result.rows); // Retornar os cartões como JSON
+        const result = await db.query("SELECT * FROM cartoes WHERE usuario_id = $1", [req.user.id]);
+        res.json(result.rows);
     } catch (error) {
         console.error("Erro ao buscar cartões:", error);
-        res.status(500).json({ error: "Erro ao buscar cartões" }); // Retornar erro como JSON
+        res.status(500).json({ error: "Erro ao buscar cartões" });
+    }
+});
+
+// Exemplo de rota protegida para listar despesas
+app.get("/api/despesas", protegerRota, async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM despesas WHERE usuario_id = $1", [req.user.id]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Erro ao buscar despesas:", error);
+        res.status(500).json({ error: "Erro ao buscar despesas" });
     }
 });
 

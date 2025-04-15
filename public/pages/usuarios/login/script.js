@@ -47,14 +47,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     const data = await response.json();
                     localStorage.setItem("token", data.token); // Armazenar o token no localStorage
                     alert("Login realizado com sucesso!");
-                    window.location.href = "/pages/home/home.html"; // Redirecionar para a página inicial
+                    window.location.href = "/pages/despesas/despesas.html"; // Redirecionar para a página de despesas
                 } else {
                     const error = await response.json();
                     alert(`Erro: ${error.error}`);
                 }
-            } catch (err) {
-                console.error("Erro ao fazer login:", err);
-                alert("Erro ao fazer login. Tente novamente.");
+            } catch (error) {
+                console.error("Erro ao realizar login:", error);
+                alert("Erro ao realizar login. Tente novamente.");
             }
         });
     }

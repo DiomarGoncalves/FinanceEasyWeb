@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../../database/db.js");
+const db = require("../database/db");
 
 // Rota para verificar despesas próximas do vencimento
 router.get("/vencimentos", (req, res) => {

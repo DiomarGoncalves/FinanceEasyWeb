@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const db = require("../../database/db");
+const db = require("../database/db");
 const JWT_SECRET = process.env.JWT_SECRET || "secreta";
 
 // Middleware para verificar autenticação
@@ -71,15 +71,51 @@ router.post("/login", async (req, res) => {
     }
 });
 
-// Exemplo de rota protegida
+// Exemplo de rota protegida com verificação de propriedade
 router.get("/perfil", autenticar, async (req, res) => {
-  try {
-    const result = await db.query("SELECT * FROM usuarios WHERE id = $1", [req.user.id]);
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error("Erro ao buscar perfil:", error);
-    res.status(500).json({ error: "Erro ao buscar perfil" });
-  }
+    try {
+        const result = await db.query("SELECT * FROM usuarios WHERE id = $1", [req.user.id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Usuário não encontrado" });
+        }
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error("Erro ao buscar perfil:", error);
+        res.status(500).json({ error: "Erro ao buscar perfil" });
+    }
+});
+
+// Atualize outras rotas para incluir a verificação de propriedade
+router.get("/dados-sensiveis", autenticar, async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM dados WHERE usuario_id = $1", [req.user.id]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+        res.status(500).json({ error: "Erro ao buscar dados" });
+    }
+});
+
+// Exemplo de rota protegida para listar cartões do usuário autenticado
+router.get("/cartoes", autenticar, async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM cartoes WHERE usuario_id = $1", [req.user.id]); // Filtrar pelo usuario_id
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Erro ao buscar cartões:", error);
+        res.status(500).json({ error: "Erro ao buscar cartões" });
+    }
+});
+
+// Exemplo de rota protegida para listar despesas do usuário autenticado
+router.get("/despesas", autenticar, async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM despesas WHERE usuario_id = $1", [req.user.id]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Erro ao buscar despesas:", error);
+        res.status(500).json({ error: "Erro ao buscar despesas" });
+    }
 });
 
 module.exports = router;

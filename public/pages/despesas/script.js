@@ -149,64 +149,53 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      // Normalizar o valor de forma_pagamento
-      const formasPagamentoValidas = ["Crédito", "Débito", "Dinheiro", "Pix"];
-      const formaPagamentoNormalizada = formaPagamento
-        .replace("Cartão de Crédito", "Crédito")
-        .replace("Cartão de Débito", "Débito");
-
-      if (!formasPagamentoValidas.includes(formaPagamentoNormalizada)) {
-        showMessage("Forma de pagamento inválida.", "error");
-        return;
+      // Verificar campos obrigatórios para "Cartão de Crédito"
+      if (formaPagamento === "Cartão de Crédito") {
+        if (!numeroParcelas || numeroParcelas <= 0) {
+          showMessage("Número de parcelas é obrigatório para Cartão de Crédito.", "error");
+          return;
+        }
+        if (!cartaoId) {
+          showMessage("Selecione um cartão para Cartão de Crédito.", "error");
+          return;
+        }
       }
 
-      if (formaPagamentoNormalizada === "Crédito" && numeroParcelas > 1) {
-        const despesaParcelada = {
-          estabelecimento,
-          data,
-          valor,
-          numero_parcelas: numeroParcelas,
-          forma_pagamento: formaPagamentoNormalizada,
-          cartao_id: cartaoId,
-        };
+      const despesa = {
+        estabelecimento,
+        data,
+        valor,
+        forma_pagamento: formaPagamento,
+        numero_parcelas: formaPagamento === "Cartão de Crédito" ? numeroParcelas : 1,
+        parcelas_restantes: formaPagamento === "Cartão de Crédito" ? numeroParcelas : 1,
+        valor_parcela: formaPagamento === "Cartão de Crédito" ? valorParcela : valor,
+        cartao_id: formaPagamento === "Cartão de Crédito" ? cartaoId : null,
+      };
 
-        try {
-          await registrarDespesaParcelada(despesaParcelada);
-          showMessage("Despesa parcelada registrada com sucesso!", "success");
-          loadDespesas();
-        } catch (error) {
-          console.error("Erro ao registrar despesa parcelada:", error.message);
-          showMessage("Erro ao registrar despesa parcelada. Por favor, tente novamente.", "error");
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("Usuário não autenticado. Faça login novamente.");
         }
-      } else {
-        const despesaNormal = {
-          estabelecimento,
-          data,
-          valor,
-          forma_pagamento: formaPagamentoNormalizada,
-          numero_parcelas: 1,
-          parcelas_restantes: 1,
-          valor_parcela: valor,
-          cartao_id: cartaoId,
-        };
 
-        try {
-          const response = await fetch("/api/despesas", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(despesaNormal),
-          });
+        const response = await fetch("/api/despesas", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify(despesa),
+        });
 
-          if (!response.ok) {
-            throw new Error("Erro ao registrar despesa.");
-          }
-
-          showMessage("Despesa registrada com sucesso!", "success");
-          loadDespesas();
-        } catch (error) {
-          console.error("Erro ao registrar despesa:", error.message);
-          showMessage("Erro ao registrar despesa. Por favor, tente novamente.", "error");
+        if (!response.ok) {
+          throw new Error("Erro ao registrar despesa.");
         }
+
+        showMessage("Despesa registrada com sucesso!", "success");
+        loadDespesas();
+      } catch (error) {
+        console.error("Erro ao registrar despesa:", error.message);
+        showMessage("Erro ao registrar despesa. Por favor, tente novamente.", "error");
       }
 
       resetFormAndUnlockInputs(event.target);
@@ -248,11 +237,30 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadDespesas() {
   try {
-    const response = await fetch("/api/despesas");
+    const token = localStorage.getItem("token"); // Obter o token armazenado
+    if (!token) {
+      throw new Error("Usuário não autenticado. Faça login novamente.");
+    }
+
+    const response = await fetch("/api/despesas", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`, // Enviar o token no cabeçalho
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Acesso não autorizado. Faça login novamente.");
+      }
+      throw new Error("Erro ao carregar despesas.");
+    }
+
     const despesas = await response.json();
     renderDespesas(despesas);
   } catch (error) {
-    showMessage(`Erro ao carregar despesas: ${error.message}`, "danger");
+    console.error("Erro ao carregar despesas:", error.message);
+    showMessage(error.message, "error");
   }
 }
 
@@ -261,15 +269,18 @@ function renderDespesas(despesas) {
   tableBody.innerHTML = ""; // Limpar tabela
 
   despesas.forEach((despesa) => {
+    const valor = typeof despesa.valor === "number" ? despesa.valor.toFixed(2) : "0.00";
+    const valorParcela = typeof despesa.valor_parcela === "number" ? despesa.valor_parcela.toFixed(2) : "0.00";
+
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${despesa.estabelecimento}</td>
       <td>${despesa.data}</td>
-      <td>R$ ${despesa.valor.toFixed(2)}</td>
+      <td>R$ ${valor}</td>
       <td class="hide-mobile">${despesa.forma_pagamento}</td>
       <td class="hide-mobile">${despesa.numero_parcelas || "-"}</td>
       <td class="hide-mobile">${despesa.parcelas_restantes || "-"}</td>
-      <td class="hide-mobile">R$ ${despesa.valor_parcela.toFixed(2) || "-"}</td>
+      <td class="hide-mobile">R$ ${valorParcela}</td>
       <td class="hide-mobile">${despesa.cartao || "-"}</td>
       <td colspan="1" class="text-center">
         <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md mr-2" onclick="payDespesa(${despesa.id})">
@@ -366,9 +377,17 @@ async function registrarDespesaParcelada(despesa) {
       throw new Error("Todos os campos são obrigatórios.");
     }
 
-    const response = await fetch("/api/despesas/parceladas", {
+    const token = localStorage.getItem("token"); // Obter o token armazenado
+    if (!token) {
+      throw new Error("Usuário não autenticado. Faça login novamente.");
+    }
+
+    const response = await fetch("/api/despesas", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`, // Enviar o token no cabeçalho
+      },
       body: JSON.stringify(despesa),
     });
 
@@ -380,10 +399,6 @@ async function registrarDespesaParcelada(despesa) {
 
     const data = await response.json();
     console.log("Despesa parcelada registrada com sucesso:", data);
-
-    // Atualizar o total gasto
-    totalGasto += despesa.valor;
-
     showMessage("Despesa parcelada registrada com sucesso!", "success");
     loadDespesas();
   } catch (error) {
