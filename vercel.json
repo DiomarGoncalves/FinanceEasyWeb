@@ -5,6 +5,6 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "public/server.js" },
-    { "src": "/(.*)", "dest": "public/server.js" }
+    { "src": "/(.*)", "dest": "/public/$1" } // Certifique-se de que arquivos estáticos sejam servidos
   ]
 }

@@ -4,7 +4,15 @@ const { Pool } = require('pg');
 // Configuração do banco de dados PostgreSQL (Neon)
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL, // URL do banco de dados Neon
-    ssl: { rejectUnauthorized: false } // Necessário para conexões seguras com Neon
+    ssl: { rejectUnauthorized: false }, // Habilitar SSL para Neon
+});
+
+pool.on("connect", () => {
+    console.log("Conectado ao banco de dados PostgreSQL");
+});
+
+pool.on("error", (err) => {
+    console.error("Erro no banco de dados:", err);
 });
 
 // Função para executar queries
@@ -16,6 +24,7 @@ const db = {
 (async () => {
     try {
         await db.query(`
+
             CREATE TABLE IF NOT EXISTS usuarios (
                 id SERIAL PRIMARY KEY,
                 nome TEXT NOT NULL,

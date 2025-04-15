@@ -21,8 +21,8 @@ app.use((req, res, next) => {
 });
 
 // Servir arquivos estáticos
+app.use(express.static(path.join(__dirname, "public")));
 app.use("/pages", express.static(path.join(__dirname, "../pages")));
-app.use("/public", express.static(path.join(__dirname)));
 
 // Middleware para autenticação de páginas protegidas
 function protegerRota(req, res, next) {
@@ -50,12 +50,12 @@ fs.readdirSync(routersPath).forEach((file) => {
 });
 
 // Rotas de páginas
-app.get("/login", (req, res) => {
+app.get("/pages/usuarios/login/login.html", (req, res) => {
     const filePath = path.join(__dirname, "pages/usuarios/login/login.html");
     res.sendFile(filePath);
 });
 
-app.get("/cadastro", (req, res) => {
+app.get("/pages/usuarios/cadastros/cadastro.html", (req, res) => {
     const filePath = path.join(__dirname, "pages/usuarios/cadastros/cadastro.html");
     res.sendFile(filePath);
 });
@@ -67,11 +67,11 @@ app.get("/pages/home/home.html", protegerRota, (req, res) => {
 
 // Redirecionar a rota raiz para a página de login
 app.get("/", (req, res) => {
-    res.redirect("/login"); // Certifique-se de que o redirecionamento está correto
+    res.redirect("/pages/usuarios/login/login.html"); // Certifique-se de que o redirecionamento está correto
 });
 
 app.get("*", (req, res) => {
-    res.redirect("/login");
+    res.redirect("/pages/usuarios/login/login.html");
 });
 
 // Exemplo de rota para listar cartões
@@ -111,6 +111,7 @@ app.post("/api/usuarios/login", async (req, res) => {
     const { email, senha } = req.body;
 
     if (!email || !senha) {
+        console.log("Campos obrigatórios ausentes:", { email, senha });
         return res.status(400).json({ error: "Todos os campos são obrigatórios" });
     }
 
@@ -119,15 +120,18 @@ app.post("/api/usuarios/login", async (req, res) => {
         const user = result.rows[0];
 
         if (!user) {
+            console.log("Usuário não encontrado:", email);
             return res.status(401).json({ error: "Usuário não encontrado" });
         }
 
         const isPasswordValid = await bcrypt.compare(senha, user.senha);
         if (!isPasswordValid) {
+            console.log("Senha incorreta para o usuário:", email);
             return res.status(401).json({ error: "Senha incorreta" });
         }
 
         const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
+        console.log("Login bem-sucedido para o usuário:", email);
         res.json({ message: "Login bem-sucedido", token });
     } catch (error) {
         console.error("Erro ao fazer login:", error);
@@ -156,8 +160,19 @@ app.use("/api/configuracoes", require("./routers/configuracoes"));
 app.use("/api/comissoes", require("./routers/comissoes"));
 app.use("/api/cartoes", require("./routers/cartoes"));
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "pages/usuarios/login/login.html"));
+// Middleware para capturar erros 404 e redirecionar para uma página de erro
+app.use((req, res, next) => {
+    if (req.accepts("html")) {
+        res.status(404).sendFile(path.join(__dirname, "pages/404.html"));
+    } else {
+        res.status(404).json({ error: "Recurso não encontrado" });
+    }
+});
+
+// Middleware global para capturar erros
+app.use((err, req, res, next) => {
+    console.error("Erro no servidor:", err.stack);
+    res.status(500).json({ error: "Erro interno do servidor" });
 });
 
 // Configuração para rodar localmente

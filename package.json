@@ -29,6 +29,7 @@
     "bcrypt": "^5.1.1",
     "bootstrap": "^5.3.3",
     "chart.js": "^3.5.1",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "electron-squirrel-startup": "^1.0.1",
     "express": "^4.21.2",
