@@ -18,6 +18,7 @@ pool.on("error", (err) => {
 // Função para executar queries
 const db = {
     query: (text, params) => pool.query(text, params),
+    getClient: () => pool.connect(),
 };
 
 // Criação das tabelas

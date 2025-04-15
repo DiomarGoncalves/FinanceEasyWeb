@@ -14,17 +14,21 @@ router.get("/", async (req, res) => {
 });
 
 // Rota para adicionar um cartão
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   const { nome, banco, limite, vencimento } = req.body;
-  const sql = `INSERT INTO cartoes (nome, banco, limite, vencimento) VALUES (?, ?, ?, ?)`;
-  db.run(sql, [nome, banco, limite, vencimento], function (err) {
-    if (err) {
-      console.error("Erro ao adicionar cartão:", err);
-      res.status(500).json({ error: "Erro ao adicionar cartão" });
-    } else {
-      res.json({ id: this.lastID });
-    }
-  });
+
+  if (!nome || !banco || !limite || !vencimento) {
+    return res.status(400).json({ error: "Todos os campos são obrigatórios" });
+  }
+
+  const sql = `INSERT INTO cartoes (nome, banco, limite, vencimento) VALUES ($1, $2, $3, $4)`;
+  try {
+    const result = await db.query(sql, [nome, banco, limite, vencimento]);
+    res.status(201).json({ id: result.rows[0]?.id || null });
+  } catch (err) {
+    console.error("Erro ao adicionar cartão:", err);
+    res.status(500).json({ error: "Erro ao adicionar cartão" });
+  }
 });
 
 // Rota para atualizar um cartão

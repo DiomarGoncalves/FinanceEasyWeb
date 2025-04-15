@@ -22,6 +22,7 @@ router.post("/inserir-valores", (req, res) => {
     });
 
     if (hasError) {
+      console.error("Erro ao inserir valores de teste.");
       return res.status(500).json({ error: "Erro ao inserir valores de teste" });
     }
     res.json({ status: "success", message: "Valores de teste inseridos com sucesso!" });

@@ -63,7 +63,7 @@ document.getElementById("cartaoForm").addEventListener("submit", async (event) =
   };
 
   try {
-    const response = await fetch("/api/cartoes", {
+    const response = await fetch("/api/cartoes/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(cartao),

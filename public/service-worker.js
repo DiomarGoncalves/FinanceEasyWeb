@@ -1,4 +1,5 @@
 self.addEventListener("install", (event) => {
+    console.log("Service Worker instalado.");
     event.waitUntil(
         caches.open("v1").then((cache) => {
             return cache.addAll([
