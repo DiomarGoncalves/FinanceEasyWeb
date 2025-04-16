@@ -7,6 +7,12 @@ const app = express();
 
 app.use(express.json());
 
+// Verificar se as variáveis de ambiente estão carregadas
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
+  console.error("Erro: Variáveis de ambiente não configuradas corretamente.");
+  process.exit(1);
+}
+
 // Rotas principais
 app.use("/api/auth/google", googleAuth);
 
