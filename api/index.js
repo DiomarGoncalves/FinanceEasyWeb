@@ -7,23 +7,15 @@ const app = express();
 
 app.use(express.json());
 
-// Log para depuração (remova após o teste)
-console.log("GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
-console.log("GOOGLE_CLIENT_SECRET:", process.env.GOOGLE_CLIENT_SECRET);
-console.log("GOOGLE_REDIRECT_URI:", process.env.GOOGLE_REDIRECT_URI);
-console.log("DATABASE_URL:", process.env.DATABASE_URL);
-
-// Verificar se as variáveis de ambiente estão carregadas
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
-  console.error("Erro: Variáveis de ambiente não configuradas corretamente.");
-  process.exit(1);
-}
+// Servir arquivos estáticos do diretório "public"
+app.use(express.static(path.join(__dirname, "../public")));
 
 // Rotas principais
 app.use("/api/auth/google", googleAuth);
 
-app.get("/api", (req, res) => {
-  res.send("API do FinanceEasy está funcionando!");
+// Rota para fornecer o client_id ao frontend
+app.get("/api/client-id", (req, res) => {
+  res.json({ client_id: process.env.GOOGLE_CLIENT_ID });
 });
 
 // Rota para a página inicial
@@ -34,28 +26,9 @@ app.get("/", (req, res) => {
 
 // Rota para capturar todas as outras requisições
 app.get("*", (req, res) => {
-  const filePath = path.join(__dirname, "../public/login.html");
+  const filePath = path.join(__dirname, "../public/404.html"); // Página 404 personalizada
   res.sendFile(filePath);
 });
-
-// Rotas para as telas do sistema
-app.get("/api/dashboard", (req, res) => res.send("Dashboard"));
-app.get("/api/contas", (req, res) => res.send("Contas"));
-app.get("/api/transacoes", (req, res) => res.send("Transações"));
-app.get("/api/cartao-credito", (req, res) => res.send("Cartões de crédito"));
-app.get("/api/planejamento", (req, res) => res.send("Planejamento"));
-app.get("/api/relatorios", (req, res) => res.send("Relatórios"));
-app.get("/api/configuracoes", (req, res) => res.send("Configurações"));
-app.get("/api/ajuda", (req, res) => res.send("Central de Ajuda"));
-
-// Submenu "Mais opções"
-app.get("/api/mais-opcoes/objetivos", (req, res) => res.send("Objetivos"));
-app.get("/api/mais-opcoes/categorias", (req, res) => res.send("Categorias"));
-app.get("/api/mais-opcoes/tags", (req, res) => res.send("Tags"));
-app.get("/api/mais-opcoes/calendario", (req, res) => res.send("Calendário"));
-app.get("/api/mais-opcoes/desempenho", (req, res) => res.send("Meu Desempenho"));
-app.get("/api/mais-opcoes/importar-transacoes", (req, res) => res.send("Importar transações"));
-app.get("/api/mais-opcoes/exportar-transacoes", (req, res) => res.send("Exportar transações"));
 
 // Iniciar o servidor
 const PORT = process.env.PORT || 3000;
