@@ -12,9 +12,17 @@ app.use("/api/auth/google", googleAuth);
 app.get("/api", (req, res) => {
   res.send("API do FinanceEasy está funcionando!");
 });
+
+// Rota para a página inicial
+app.get("/", (req, res) => {
+  const filePath = path.join(__dirname, "../public/login.html");
+  res.sendFile(filePath);
+});
+
+// Rota para capturar todas as outras requisições
 app.get("*", (req, res) => {
-    const filePath = path.join(__dirname, "../public/login.html");
-    res.sendFile(filePath);
+  const filePath = path.join(__dirname, "../public/login.html");
+  res.sendFile(filePath);
 });
 
 // Rotas para as telas do sistema
