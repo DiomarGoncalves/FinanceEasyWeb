@@ -7,6 +7,12 @@ const app = express();
 
 app.use(express.json());
 
+// Log para depuração (remova após o teste)
+console.log("GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
+console.log("GOOGLE_CLIENT_SECRET:", process.env.GOOGLE_CLIENT_SECRET);
+console.log("GOOGLE_REDIRECT_URI:", process.env.GOOGLE_REDIRECT_URI);
+console.log("DATABASE_URL:", process.env.DATABASE_URL);
+
 // Verificar se as variáveis de ambiente estão carregadas
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
   console.error("Erro: Variáveis de ambiente não configuradas corretamente.");
