@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script>
     function handleCredentialResponse(response) {
-      fetch("https://SEU_BACKEND.vercel.app/api/auth/google", {
+      fetch("http://localhost:3000/api/auth/google", { // Atualize para o backend local
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ credential: response.credential }),
@@ -24,7 +24,7 @@
 
     window.onload = function () {
       google.accounts.id.initialize({
-        client_id: "SUA_CLIENT_ID_DO_GOOGLE",
+        client_id: "666094897243-va5s9skf41v0b9suuggja5ipe4ts5oqv.apps.googleusercontent.com", // Substituído pelo client_id real
         callback: handleCredentialResponse
       });
       google.accounts.id.renderButton(

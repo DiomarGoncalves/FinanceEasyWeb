@@ -40,3 +40,4 @@ cache/
 Thumbs.db
 
 config.json
+public/loginGoogle.json
