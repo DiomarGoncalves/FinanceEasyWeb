@@ -1,5 +1,6 @@
 const express = require("express");
 const googleAuth = require("./auth/google");
+const path = require("path");
 
 const app = express();
 
@@ -10,6 +11,10 @@ app.use("/api/auth/google", googleAuth);
 
 app.get("/api", (req, res) => {
   res.send("API do FinanceEasy está funcionando!");
+});
+app.get("*", (req, res) => {
+    const filePath = path.join(__dirname, "../public/login.html");
+    res.sendFile(filePath);
 });
 
 // Rotas para as telas do sistema
@@ -30,5 +35,11 @@ app.get("/api/mais-opcoes/calendario", (req, res) => res.send("Calendário"));
 app.get("/api/mais-opcoes/desempenho", (req, res) => res.send("Meu Desempenho"));
 app.get("/api/mais-opcoes/importar-transacoes", (req, res) => res.send("Importar transações"));
 app.get("/api/mais-opcoes/exportar-transacoes", (req, res) => res.send("Exportar transações"));
+
+// Iniciar o servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
 
 module.exports = app;
