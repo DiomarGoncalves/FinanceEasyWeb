@@ -1,3 +1,4 @@
+require("dotenv").config(); // Carregar variáveis do .env
 const express = require("express");
 const googleAuth = require("./auth/google");
 const path = require("path");

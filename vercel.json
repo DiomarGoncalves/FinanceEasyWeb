@@ -5,7 +5,7 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)", "dest": "/" }
+    { "src": "/(.*)", "dest": "/public/$1" }
   ],
   "env": {
     "GOOGLE_CLIENT_ID": "@google_client_id",
