@@ -1,10 +1,11 @@
 const { google } = require("googleapis");
 const express = require("express");
+const { v4: uuidv4 } = require("uuid");
 const router = express.Router();
 const db = require("../models/db");
 
 const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
+  "666094897243-va5s9skf41v0b9suuggja5ipe4ts5oqv.apps.googleusercontent.com",
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URI
 );
@@ -14,18 +15,26 @@ router.post("/", async (req, res) => {
     const { credential } = req.body;
     const ticket = await oauth2Client.verifyIdToken({
       idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: "666094897243-va5s9skf41v0b9suuggja5ipe4ts5oqv.apps.googleusercontent.com",
     });
 
     const payload = ticket.getPayload();
-    const userId = payload["sub"];
+    let userId = payload["sub"];
     const email = payload["email"];
     const name = payload["name"];
+    const avatarUrl = payload["picture"];
 
-    // Verificar ou salvar o usuário no banco de dados
+    if (!/^[0-9a-fA-F-]{36}$/.test(userId)) {
+      userId = uuidv4();
+    }
+
     const user = await db.query(
-      "INSERT INTO users (id, email, name) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET email = $2, name = $3 RETURNING *",
-      [userId, email, name]
+      `INSERT INTO users (id, email, name, avatar_url, google_id) 
+       VALUES ($1, $2, $3, $4, $5) 
+       ON CONFLICT (email) DO UPDATE 
+       SET name = $3, avatar_url = $4, google_id = $5 
+       RETURNING *`,
+      [userId, email, name, avatarUrl, payload["sub"]]
     );
 
     res.status(200).json({

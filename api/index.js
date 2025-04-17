@@ -31,14 +31,70 @@ app.use("/api/performance", require("./routes/performance"));
 app.use("/api/import-transactions", require("./routes/importTransactions"));
 app.use("/api/export-transactions", require("./routes/exportTransactions"));
 
-// Rota para fornecer o client_id ao frontend
-app.get("/api/client-id", (req, res) => {
-  res.json({ client_id: process.env.GOOGLE_CLIENT_ID });
+// Rotas para servir páginas HTML
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/home/index.html"));
+});
+
+app.get("/accounts", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/contas/index.html"));
+});
+
+app.get("/transactions", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/transacoes/index.html"));
+});
+
+app.get("/credit-cards", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/cartao-credito/index.html"));
+});
+
+app.get("/planning", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/planejamento/index.html"));
+});
+
+app.get("/reports", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/relatorios/index.html"));
+});
+
+app.get("/settings", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/configuracoes/index.html"));
+});
+
+app.get("/help", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/ajuda/index.html"));
+});
+
+app.get("/goals", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/mais-opcoes/objetivos.html"));
+});
+
+app.get("/categories", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/mais-opcoes/categorias.html"));
+});
+
+app.get("/tags", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/mais-opcoes/tags.html"));
+});
+
+app.get("/calendar", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/mais-opcoes/calendario.html"));
+});
+
+app.get("/performance", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/mais-opcoes/desempenho.html"));
+});
+
+app.get("/import-transactions", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/mais-opcoes/importar-transacoes.html"));
+});
+
+app.get("/export-transactions", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/mais-opcoes/exportar-transacoes.html"));
 });
 
 // Rota para a página inicial
 app.get("/", (req, res) => {
-  const filePath = path.join(__dirname, "../public/login.html");
+  const filePath = path.join(__dirname, "../public/index.html");
   res.sendFile(filePath);
 });
 

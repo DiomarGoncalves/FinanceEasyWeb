@@ -33,8 +33,9 @@
       .then(data => {
         if (data.token) {
           localStorage.setItem("token", data.token);
-          window.location.href = "/home";
+          window.location.href = "/dashboard";
         } else {
+          console.error("Erro no servidor:", data);
           alert("Erro ao autenticar. Tente novamente mais tarde.");
         }
       })
@@ -51,10 +52,9 @@
       }
 
       google.accounts.id.initialize({
-        client_id: "666094897243-va5s9skf41v0b9suuggja5ipe4ts5oqv.apps.googleusercontent.com",
+        client_id: "666094897243-va5s9skf41v0b9suuggja5ipe4ts5oqv.apps.googleusercontent.com", // Client ID inserido diretamente
         callback: handleCredentialResponse
       });
-
       const btn = document.getElementById("google-button");
       if (btn) {
         google.accounts.id.renderButton(btn, {
