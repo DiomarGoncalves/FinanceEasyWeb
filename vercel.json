@@ -1,15 +1,33 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" }
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/cadastrar", "dest": "/public/cadastrar.html" },
-    { "src": "/", "dest": "/public/index.html" },
-    { "src": "/(.*)", "dest": "/public/$1" }
-  ],
-  "static": {
-    "public": "public"
-  }
+    { "src": "/api/(.*)", "dest": "/api/index.js" },
+    { "src": "/cadastrar", "dest": "/public/cadastro.html" },
+    { "src": "/dashboard", "dest": "/public/home/index.html" },
+    { "src": "/accounts", "dest": "/public/contas/index.html" },
+    { "src": "/transactions", "dest": "/public/transacoes/index.html" },
+    { "src": "/credit-cards", "dest": "/public/cartao-credito/index.html" },
+    { "src": "/planning", "dest": "/public/planejamento/index.html" },
+    { "src": "/reports", "dest": "/public/relatorios/index.html" },
+    { "src": "/settings", "dest": "/public/configuracoes/index.html" },
+    { "src": "/help", "dest": "/public/ajuda/index.html" },
+    { "src": "/goals", "dest": "/public/mais-opcoes/objetivos.html" },
+    { "src": "/categories", "dest": "/public/mais-opcoes/categorias.html" },
+    { "src": "/tags", "dest": "/public/mais-opcoes/tags.html" },
+    { "src": "/calendar", "dest": "/public/mais-opcoes/calendario.html" },
+    { "src": "/performance", "dest": "/public/mais-opcoes/desempenho.html" },
+    { "src": "/import-transactions", "dest": "/public/mais-opcoes/importar-transacoes.html" },
+    { "src": "/export-transactions", "dest": "/public/mais-opcoes/exportar-transacoes.html" },
+    { "src": "/", "dest": "/public/index.html" }
+  ]
 }
