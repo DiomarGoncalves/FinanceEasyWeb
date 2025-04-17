@@ -8,91 +8,96 @@ const app = express();
 
 app.use(express.json());
 
+// Middleware para verificar autenticação
+function isAuthenticated(req, res, next) {
+  const token = req.headers.authorization?.split(" ")[1]; // Espera o token no formato "Bearer <token>"
+  if (!token || !token.startsWith("fake-jwt-token-for-")) {
+    return res.redirect("/"); // Redireciona para a página de login
+  }
+  next();
+}
+
 // Servir arquivos estáticos do diretório "public"
 app.use(express.static(path.join(__dirname, "../public")));
 
 // Rotas principais
 app.use("/api/auth/google", googleAuth);
 
-// Rotas para as telas do sistema
-app.use("/api/dashboard", require("./routes/dashboard"));
-app.use("/api/accounts", require("./routes/accounts"));
-app.use("/api/transactions", require("./routes/transactions"));
-app.use("/api/credit-cards", require("./routes/creditCards"));
-app.use("/api/planning", require("./routes/planning"));
-app.use("/api/reports", require("./routes/reports"));
-app.use("/api/settings", require("./routes/settings"));
-app.use("/api/help", require("./routes/help"));
-app.use("/api/goals", require("./routes/goals"));
-app.use("/api/categories", require("./routes/categories"));
-app.use("/api/tags", require("./routes/tags"));
-app.use("/api/calendar", require("./routes/calendar"));
-app.use("/api/performance", require("./routes/performance"));
-app.use("/api/import-transactions", require("./routes/importTransactions"));
-app.use("/api/export-transactions", require("./routes/exportTransactions"));
+// Rotas protegidas
+app.use("/api/dashboard", isAuthenticated, require("./routes/dashboard"));
+app.use("/api/accounts", isAuthenticated, require("./routes/accounts"));
+app.use("/api/transactions", isAuthenticated, require("./routes/transactions"));
+app.use("/api/credit-cards", isAuthenticated, require("./routes/creditCards"));
+app.use("/api/planning", isAuthenticated, require("./routes/planning"));
+app.use("/api/reports", isAuthenticated, require("./routes/reports"));
+app.use("/api/settings", isAuthenticated, require("./routes/settings"));
+app.use("/api/help", isAuthenticated, require("./routes/help"));
+app.use("/api/goals", isAuthenticated, require("./routes/goals"));
+app.use("/api/categories", isAuthenticated, require("./routes/categories"));
+app.use("/api/tags", isAuthenticated, require("./routes/tags"));
+app.use("/api/calendar", isAuthenticated, require("./routes/calendar"));
+app.use("/api/performance", isAuthenticated, require("./routes/performance"));
+app.use("/api/import-transactions", isAuthenticated, require("./routes/importTransactions"));
+app.use("/api/export-transactions", isAuthenticated, require("./routes/exportTransactions"));
 
-// Rotas para servir páginas HTML
-app.get("/cadastrar", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/cadastro.html"));
-});
-
-app.get("/dashboard", (req, res) => {
+// Rotas para servir páginas HTML protegidas
+app.get("/dashboard", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/home/index.html"));
 });
 
-app.get("/accounts", (req, res) => {
+app.get("/accounts", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/contas/index.html"));
 });
 
-app.get("/transactions", (req, res) => {
+app.get("/transactions", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/transacoes/index.html"));
 });
 
-app.get("/credit-cards", (req, res) => {
+app.get("/credit-cards", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/cartao-credito/index.html"));
 });
 
-app.get("/planning", (req, res) => {
+app.get("/planning", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/planejamento/index.html"));
 });
 
-app.get("/reports", (req, res) => {
+app.get("/reports", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/relatorios/index.html"));
 });
 
-app.get("/settings", (req, res) => {
+app.get("/settings", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/configuracoes/index.html"));
 });
 
-app.get("/help", (req, res) => {
+app.get("/help", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/ajuda/index.html"));
 });
 
-app.get("/goals", (req, res) => {
+app.get("/goals", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/mais-opcoes/objetivos.html"));
 });
 
-app.get("/categories", (req, res) => {
+app.get("/categories", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/mais-opcoes/categorias.html"));
 });
 
-app.get("/tags", (req, res) => {
+app.get("/tags", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/mais-opcoes/tags.html"));
 });
 
-app.get("/calendar", (req, res) => {
+app.get("/calendar", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/mais-opcoes/calendario.html"));
 });
 
-app.get("/performance", (req, res) => {
+app.get("/performance", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/mais-opcoes/desempenho.html"));
 });
 
-app.get("/import-transactions", (req, res) => {
+app.get("/import-transactions", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/mais-opcoes/importar-transacoes.html"));
 });
 
-app.get("/export-transactions", (req, res) => {
+app.get("/export-transactions", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/mais-opcoes/exportar-transacoes.html"));
 });
 
