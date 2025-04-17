@@ -32,6 +32,10 @@ app.use("/api/import-transactions", require("./routes/importTransactions"));
 app.use("/api/export-transactions", require("./routes/exportTransactions"));
 
 // Rotas para servir páginas HTML
+app.get("/cadastrar", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/cadastro.html"));
+});
+
 app.get("/dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/home/index.html"));
 });
@@ -95,12 +99,6 @@ app.get("/export-transactions", (req, res) => {
 // Rota para a página inicial
 app.get("/", (req, res) => {
   const filePath = path.join(__dirname, "../public/index.html");
-  res.sendFile(filePath);
-});
-
-// Rota para capturar todas as outras requisições
-app.get("*", (req, res) => {
-  const filePath = path.join(__dirname, "../public/404.html"); // Página 404 personalizada
   res.sendFile(filePath);
 });
 
