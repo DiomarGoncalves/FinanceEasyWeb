@@ -47,17 +47,18 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ credential: response.credential }),
         })
-          .then(res => res.json())
-          .then(data => {
+          .then((res) => res.json())
+          .then((data) => {
             if (data.token) {
-              localStorage.setItem("token", data.token);
+              localStorage.setItem("token", data.token); // Salvar o token no localStorage
+              console.log("Redirecionando para:", data.redirect);
               window.location.href = data.redirect; // Redirecionar para o dashboard
             } else {
               console.error("Erro no servidor:", data);
-              alert(`Erro ao autenticar: ${data.error || "Tente novamente mais tarde."}`);
+              alert("Erro ao autenticar. Tente novamente mais tarde.");
             }
           })
-          .catch(error => {
+          .catch((error) => {
             console.error("Erro ao autenticar:", error);
             alert("Erro ao autenticar. Tente novamente mais tarde.");
           });
@@ -73,15 +74,14 @@
           client_id: "666094897243-va5s9skf41v0b9suuggja5ipe4ts5oqv.apps.googleusercontent.com",
           callback: handleCredentialResponse,
         });
-
-        google.accounts.id.renderButton(
-          document.getElementById("google-button"),
-          {
+        const btn = document.getElementById("google-button");
+        if (btn) {
+          google.accounts.id.renderButton(btn, {
             theme: "outline",
             size: "large",
             width: 280,
-          }
-        );
+          });
+        }
       };
     </script>
   </body>

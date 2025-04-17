@@ -9,12 +9,31 @@ const app = express();
 app.use(express.json());
 
 // Middleware para verificar autenticação
-function isAuthenticated(req, res, next) {
+async function isAuthenticated(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1]; // Espera o token no formato "Bearer <token>"
+  console.log("Token recebido:", token);
+
   if (!token || !token.startsWith("fake-jwt-token-for-")) {
-    return res.redirect("/"); // Redireciona para a página de login
+    console.error("Token ausente ou inválido. Redirecionando para login.");
+    return res.status(401).json({ error: "Usuário não autenticado." });
   }
-  next();
+
+  const userId = token.replace("fake-jwt-token-for-", ""); // Extrair o userId do token
+  console.log("UserId extraído do token:", userId);
+
+  try {
+    const user = await db.query(`SELECT * FROM users WHERE google_id = $1`, [userId]);
+    if (user.rows.length === 0) {
+      console.error("Usuário não encontrado no banco de dados.");
+      return res.status(401).json({ error: "Usuário não autenticado." });
+    }
+
+    console.log("Usuário autenticado com sucesso:", user.rows[0].email);
+    next();
+  } catch (error) {
+    console.error("Erro ao verificar autenticação:", error.message);
+    return res.status(500).json({ error: "Erro interno ao verificar autenticação." });
+  }
 }
 
 // Servir arquivos estáticos do diretório "public"
@@ -99,6 +118,11 @@ app.get("/import-transactions", isAuthenticated, (req, res) => {
 
 app.get("/export-transactions", isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "../public/mais-opcoes/exportar-transacoes.html"));
+});
+
+// Rota para a página de cadastro (sem autenticação)
+app.get("/cadastrar", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/cadastro.html"));
 });
 
 // Rota para a página inicial

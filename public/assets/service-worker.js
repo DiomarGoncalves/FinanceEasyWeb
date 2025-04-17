@@ -1,7 +1,7 @@
 const CACHE_NAME = "financEasy-cache-v1";
 const urlsToCache = [
   "/",
-  "/pages/home/home.html",
+  "/pages/home/index.html",
   "/pages/despesas/despesas.html",
   "/pages/receitas/receitas.html",
   "/pages/relatorios/relatorios.html",

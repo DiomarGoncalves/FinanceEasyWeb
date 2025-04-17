@@ -40,7 +40,7 @@ router.post("/register", async (req, res) => {
 
     if (existingUser.rows.length > 0) {
       console.error("Usuário já cadastrado.");
-      return res.status(400).json({ error: "Usuário já cadastrado." });
+      return res.status(409).json({ error: "Usuário já cadastrado." }); // Código 409 para conflito
     }
 
     // Inserir novo usuário no banco de dados
@@ -51,13 +51,15 @@ router.post("/register", async (req, res) => {
       [uuidv4(), email, name, avatarUrl, userId]
     );
 
+    console.log("Usuário cadastrado com sucesso:", newUser.rows[0].email);
+
     res.status(201).json({
       message: "Usuário cadastrado com sucesso.",
       user: newUser.rows[0],
     });
   } catch (error) {
     console.error("Erro ao cadastrar usuário:", error.message, error.stack);
-    res.status(400).json({ 
+    res.status(500).json({ 
       error: "Falha ao cadastrar usuário.", 
       details: error.message 
     });
@@ -100,7 +102,7 @@ router.post("/login", async (req, res) => {
     // Retornar token e redirecionar para o dashboard
     res.status(200).json({
       token: `fake-jwt-token-for-${userId}`,
-      redirect: "/dashboard",
+      redirect: "/dashboard", // URL para redirecionamento
     });
   } catch (error) {
     console.error("Erro ao autenticar com Google:", error.message, error.stack);
