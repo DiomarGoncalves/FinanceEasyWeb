@@ -1,6 +1,7 @@
 const { google } = require("googleapis");
 const express = require("express");
 const router = express.Router();
+const db = require("../models/db");
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -21,12 +22,15 @@ router.post("/", async (req, res) => {
     const email = payload["email"];
     const name = payload["name"];
 
-    // Aqui você pode salvar o usuário no banco de dados, se necessário.
+    // Verificar ou salvar o usuário no banco de dados
+    const user = await db.query(
+      "INSERT INTO users (id, email, name) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET email = $2, name = $3 RETURNING *",
+      [userId, email, name]
+    );
 
     res.status(200).json({
       token: `fake-jwt-token-for-${userId}`,
-      email,
-      name,
+      user: user.rows[0],
     });
   } catch (error) {
     console.error("Erro ao autenticar com Google:", error);
