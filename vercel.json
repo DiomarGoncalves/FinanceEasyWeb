@@ -28,6 +28,7 @@
     { "src": "/performance", "dest": "/public/mais-opcoes/desempenho.html" },
     { "src": "/import-transactions", "dest": "/public/mais-opcoes/importar-transacoes.html" },
     { "src": "/export-transactions", "dest": "/public/mais-opcoes/exportar-transacoes.html" },
+    { "src": "/cards", "dest": "/public/cartao-credito/index.html" },
     { "src": "/", "dest": "/public/index.html" }
   ]
 }

@@ -92,26 +92,8 @@
     </div>
 
     <!-- Cards de cartões -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Cartão exemplo -->
-      <div class="bg-zinc-800 p-4 rounded-xl shadow-lg">
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-zinc-400">cartão nu bank</span>
-          <button class="text-zinc-500 hover:text-white">⋮</button>
-        </div>
-        <p class="text-xs mt-2">Fatura paga</p>
-        <p class="text-sm text-red-400">R$ 0,00</p>
-        <p class="text-xs text-zinc-400 mt-2">Data de pagamento: 14 de abril de 2025</p>
-
-        <div class="w-full bg-zinc-700 h-2 rounded-full mt-4">
-          <div class="bg-green-400 h-2 rounded-full" style="width: 34.2%"></div>
-        </div>
-        <p class="text-xs text-zinc-400 mt-1">Limite disponível: R$ 1.052,73</p>
-
-        <a href="#" class="text-right text-sm text-cyan-400 hover:underline mt-2 block">FATURA PAGA</a>
-      </div>
-
-      <!-- Outros cartões ... -->
+    <div id="cartoesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Cartões serão carregados dinamicamente -->
     </div>
   </main>
 
@@ -121,16 +103,14 @@
       <h2 class="text-xl font-bold mb-4">Novo cartão de crédito</h2>
       
       <form id="formNovoCartao" class="space-y-4">
-        <input type="number" placeholder="Limite" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" />
-        <input type="text" placeholder="Descrição" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" />
-        <select class="w-full p-2 rounded bg-zinc-800 border border-zinc-700">
-          <option value="">Selecione a bandeira</option>
-          <option value="visa">Visa</option>
-          <option value="master">Mastercard</option>
-        </select>
-        <input type="text" placeholder="Categoria" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" />
-        <input type="number" placeholder="Dia de fechamento" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" />
-        <input type="number" placeholder="Dia do vencimento" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" />
+        <input id="nomeCartao" type="text" placeholder="Nome do cartão" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" required />
+        <input id="bandeiraCartao" type="text" placeholder="Bandeira" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" />
+        <input id="limiteCartao" type="number" placeholder="Limite" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" required />
+        <input id="limiteDisponivel" type="number" placeholder="Limite disponível" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" required />
+        <input id="diaFechamento" type="number" placeholder="Dia de fechamento" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" required />
+        <input id="diaVencimento" type="number" placeholder="Dia do vencimento" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" required />
+        <textarea id="descricaoCartao" placeholder="Descrição" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700"></textarea>
+        <input id="tagCartao" type="text" placeholder="Tag" class="w-full p-2 rounded bg-zinc-800 border border-zinc-700" />
 
         <div class="flex justify-end gap-2 mt-4">
           <button type="button" onclick="closeModal()" class="px-4 py-2 rounded bg-zinc-700 hover:bg-zinc-600">Cancelar</button>
@@ -142,6 +122,7 @@
 
   <script>
     const modal = document.getElementById('modalCartao');
+    const cartoesContainer = document.getElementById('cartoesContainer');
 
     function openModal() {
       modal.classList.remove('hidden');
@@ -151,11 +132,78 @@
       modal.classList.add('hidden');
     }
 
-    document.getElementById('formNovoCartao').addEventListener('submit', (e) => {
+    async function carregarCartoes() {
+      try {
+        const response = await fetch('/api/cards', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'user-id': '00000000-0000-0000-0000-000000000000' // Substituir pelo UUID válido do usuário
+          }
+        });
+        const cartoes = await response.json();
+        if (!Array.isArray(cartoes)) {
+          throw new Error("Resposta inesperada da API");
+        }
+        cartoesContainer.innerHTML = '';
+        cartoes.forEach(cartao => {
+          const card = document.createElement('div');
+          card.className = 'bg-zinc-800 p-4 rounded-xl shadow-lg';
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-zinc-400">${cartao.name}</span>
+              <button class="text-zinc-500 hover:text-white">⋮</button>
+            </div>
+            <p class="text-xs mt-2">Limite disponível</p>
+            <p class="text-sm text-green-400">R$ ${cartao.available_limit.toFixed(2)}</p>
+            <p class="text-xs text-zinc-400 mt-2">Fechamento: ${cartao.closing_day} | Vencimento: ${cartao.due_day}</p>
+          `;
+          cartoesContainer.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Erro ao carregar cartões:', error);
+      }
+    }
+
+    document.getElementById('formNovoCartao').addEventListener('submit', async (e) => {
       e.preventDefault();
-      // lógica de envio para API
-      closeModal();
+      const novoCartao = {
+        name: document.getElementById('nomeCartao').value,
+        brand: document.getElementById('bandeiraCartao').value,
+        credit_limit: parseFloat(document.getElementById('limiteCartao').value),
+        available_limit: parseFloat(document.getElementById('limiteDisponivel').value),
+        due_day: parseInt(document.getElementById('diaVencimento').value),
+        closing_day: parseInt(document.getElementById('diaFechamento').value),
+        description: document.getElementById('descricaoCartao').value,
+        tag: document.getElementById('tagCartao').value
+      };
+
+      try {
+        const response = await fetch('/api/cards', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'user-id': '00000000-0000-0000-0000-000000000000' // Substituir pelo UUID válido do usuário
+          },
+          body: JSON.stringify(novoCartao)
+        });
+
+        if (response.ok) {
+          alert('Cartão adicionado com sucesso!');
+          closeModal();
+          carregarCartoes();
+        } else {
+          const error = await response.json();
+          alert(`Erro ao adicionar cartão: ${error.error}`);
+        }
+      } catch (error) {
+        console.error('Erro ao adicionar cartão:', error);
+        alert('Erro ao adicionar cartão. Tente novamente.');
+      }
     });
+
+    // Carregar cartões ao carregar a página
+    carregarCartoes();
   </script>
 
 </body>
