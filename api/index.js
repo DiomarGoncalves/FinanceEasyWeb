@@ -8,33 +8,36 @@ const app = express();
 
 app.use(express.json());
 
-// Middleware para verificar autenticação (desativado temporariamente)
-// async function isAuthenticated(req, res, next) {
-//   const token = req.headers.authorization?.split(" ")[1]; // Espera o token no formato "Bearer <token>"
-//   console.log("Token recebido:", token);
+// Middleware para verificar autenticação
+async function isAuthenticated(req, res, next) {
+  const token = req.headers.authorization?.split(" ")[1]; // Espera o token no formato "Bearer <token>"
+  const userId = req.headers["user-id"]; // Recuperar o userId do cabeçalho
 
-//   if (!token || !token.startsWith("fake-jwt-token-for-")) {
-//     console.error("Token ausente ou inválido. Redirecionando para login.");
-//     return res.status(401).json({ error: "Usuário não autenticado." });
-//   }
+  if (!token || !token.startsWith("fake-jwt-token-for-") || !userId) {
+    console.error("Token ou userId ausente ou inválido.");
+    return res.status(401).json({ error: "Usuário não autenticado." });
+  }
 
-//   const userId = token.replace("fake-jwt-token-for-", ""); // Extrair o userId do token
-//   console.log("UserId extraído do token:", userId);
+  const extractedUserId = token.replace("fake-jwt-token-for-", ""); // Extrair o userId do token
+  if (extractedUserId !== userId) {
+    console.error("Token não corresponde ao userId.");
+    return res.status(401).json({ error: "Usuário não autenticado." });
+  }
 
-//   try {
-//     const user = await db.query(`SELECT * FROM users WHERE google_id = $1`, [userId]);
-//     if (user.rows.length === 0) {
-//       console.error("Usuário não encontrado no banco de dados.");
-//       return res.status(401).json({ error: "Usuário não autenticado." });
-//     }
+  try {
+    const user = await db.query(`SELECT * FROM users WHERE id = $1`, [userId]);
+    if (user.rows.length === 0) {
+      console.error("Usuário não encontrado no banco de dados.");
+      return res.status(401).json({ error: "Usuário não autenticado." });
+    }
 
-//     console.log("Usuário autenticado com sucesso:", user.rows[0].email);
-//     next();
-//   } catch (error) {
-//     console.error("Erro ao verificar autenticação:", error.message);
-//     return res.status(500).json({ error: "Erro interno ao verificar autenticação." });
-//   }
-// }
+    console.log("Usuário autenticado com sucesso:", user.rows[0].email);
+    next();
+  } catch (error) {
+    console.error("Erro ao verificar autenticação:", error.message);
+    return res.status(500).json({ error: "Erro interno ao verificar autenticação." });
+  }
+}
 
 // Servir arquivos estáticos do diretório "public"
 app.use(express.static(path.join(__dirname, "../public")));

@@ -99,9 +99,10 @@ router.post("/login", async (req, res) => {
 
     console.log(`Usuário autenticado com sucesso: ${email}`);
 
-    // Retornar token e redirecionar para o dashboard
+    // Retornar token, user.id e redirecionar para o dashboard
     res.status(200).json({
       token: `fake-jwt-token-for-${userId}`,
+      userId: user.rows[0].id, // Retornar o UUID do usuário
       redirect: "/dashboard", // URL para redirecionamento
     });
   } catch (error) {
