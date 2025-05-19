@@ -1,11 +1,22 @@
-import { useState } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../services/firebase';
+import { useState, useEffect } from 'react';
 import { Bell, CreditCard, User, Shield, Palette, Globe } from 'lucide-react';
 
+// Busca usuário do localStorage (ajuste conforme sua lógica)
+function getUser() {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    return {};
+  }
+}
+
 const Settings = () => {
-  const [user] = useAuthState(auth);
+  const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('profile');
+
+  useEffect(() => {
+    setUser(getUser());
+  }, []);
 
   const tabs = [
     { id: 'profile', label: 'Perfil', icon: <User size={20} /> },

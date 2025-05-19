@@ -1,21 +1,31 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import { Menu, Bell, LogOut, User, Settings, Search, MenuIcon } from 'lucide-react';
-import { auth } from '../services/firebase';
+
+// Busca usuário do localStorage (ajuste conforme sua lógica)
+function getUser() {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    return {};
+  }
+}
 
 interface HeaderProps {
   toggleSidebar: () => void;
 }
 
 const Header = ({ toggleSidebar }: HeaderProps) => {
-  const [user] = useAuthState(auth);
+  const [user, setUser] = useState<any>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setUser(getUser());
+  }, []);
 
   // Fechar dropdowns quando clicar fora deles
   useEffect(() => {
@@ -35,12 +45,8 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   }, []);
 
   const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      navigate('/login');
-    } catch (error) {
-      console.error('Erro ao sair:', error);
-    }
+    localStorage.removeItem('user');
+    navigate('/login');
   };
 
   return (

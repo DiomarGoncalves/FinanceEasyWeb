@@ -12,14 +12,15 @@ const LoadingScreen: React.FC = () => {
         <div className="h-full bg-white animate-[progress_1.5s_ease-in-out_infinite]" 
              style={{width: '0%', animation: 'progress 1.5s ease-in-out infinite'}}></div>
       </div>
-      
-      <style jsx>{`
-        @keyframes progress {
-          0% { width: 0%; }
-          50% { width: 70%; }
-          100% { width: 100%; }
-        }
-      `}</style>
+      <style>
+        {`
+          @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+          }
+        `}
+      </style>
     </div>
   );
 };

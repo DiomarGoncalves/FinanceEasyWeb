@@ -1,28 +1,94 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+// Serviço para acessar a API backend via HTTP
 
-// Substitua essas configurações pelas suas próprias credenciais do Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-  authDomain: "seu-app.firebaseapp.com",
-  projectId: "seu-app",
-  storageBucket: "seu-app.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abc123def456ghi789jkl"
-};
+const API_URL = 'http://localhost:3001'; // Altere para a URL do seu backend
 
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
+export async function login(email: string, password: string) {
+  const res = await fetch(`${API_URL}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) throw new Error('Falha no login');
+  return res.json();
+}
 
-// Exportar serviços
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-export const db = getFirestore(app);
+export async function register(email: string, password: string) {
+  const res = await fetch(`${API_URL}/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) throw new Error('Falha no cadastro');
+  return res.json();
+}
 
-// Configurar o provedor do Google para solicitar acesso ao e-mail do usuário
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
+function getToken() {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  return user?.token;
+}
 
-export default app;
+// Cartões de crédito
+export async function getCreditCards() {
+  const res = await fetch(`${API_URL}/credit-cards`, {
+    headers: { Authorization: `Bearer ${getToken()}` }
+  });
+  if (!res.ok) throw new Error('Erro ao buscar cartões');
+  return res.json();
+}
+
+export async function createCreditCard(data: any) {
+  const res = await fetch(`${API_URL}/credit-cards`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Erro ao criar cartão');
+  return res.json();
+}
+
+// Receitas
+export async function getIncomes() {
+  const res = await fetch(`${API_URL}/incomes`, {
+    headers: { Authorization: `Bearer ${getToken()}` }
+  });
+  if (!res.ok) throw new Error('Erro ao buscar receitas');
+  return res.json();
+}
+
+export async function createIncome(data: any) {
+  const res = await fetch(`${API_URL}/incomes`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Erro ao criar receita');
+  return res.json();
+}
+
+// Despesas
+export async function getExpenses() {
+  const res = await fetch(`${API_URL}/expenses`, {
+    headers: { Authorization: `Bearer ${getToken()}` }
+  });
+  if (!res.ok) throw new Error('Erro ao buscar despesas');
+  return res.json();
+}
+
+export async function createExpense(data: any) {
+  const res = await fetch(`${API_URL}/expenses`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Erro ao criar despesa');
+  return res.json();
+}

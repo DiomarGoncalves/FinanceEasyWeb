@@ -7,7 +7,8 @@ import {
   Trash2, 
   AlertCircle, 
   CheckCircle,
-  PlusCircle
+  PlusCircle,
+  X
 } from 'lucide-react';
 
 // Tipos de dados

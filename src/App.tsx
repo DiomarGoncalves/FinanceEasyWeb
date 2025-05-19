@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from './services/firebase';
 
 // Pages
 import Login from './pages/Login';
@@ -17,23 +15,27 @@ import NotFound from './pages/NotFound';
 import Layout from './components/Layout';
 import LoadingScreen from './components/LoadingScreen';
 
+function getUser() {
+  try {
+    return JSON.parse(localStorage.getItem('user') || 'null');
+  } catch {
+    return null;
+  }
+}
+
 function App() {
-  const [user, loading] = useAuthState(auth);
+  const [user, setUser] = useState(getUser());
   const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
-    // Simulando um tempo de carregamento para mostrar a tela de loading
-    // Em produção, isso seria substituído pelo carregamento real dos dados
-    if (!loading) {
-      const timer = setTimeout(() => {
-        setAppIsReady(true);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
+    setUser(getUser());
+    const timer = setTimeout(() => {
+      setAppIsReady(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
-  if (loading || !appIsReady) {
+  if (!appIsReady) {
     return <LoadingScreen />;
   }
 
