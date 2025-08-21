@@ -18,9 +18,7 @@ import Configuracoes from './pages/Configuracoes';
 import NotFound from './pages/NotFound';
 import Faturas from './pages/Faturas';
 import Metas from './pages/Metas';
-import Orcamento from './pages/Orcamento';
-import BackupRestore from './pages/BackupRestore';
-import AnaliseIA from './pages/AnaliseIA';
+import OpenFinancePage from './pages/OpenFinancePage';
 
 function App() {
   return (
@@ -124,28 +122,10 @@ function App() {
                 />
                 
                 <Route 
-                  path="/orcamento"
+                  path="/openfinance"
                   element={
                     <PrivateRoute>
-                      <Orcamento />
-                    </PrivateRoute>
-                  }
-                />
-                
-                <Route 
-                  path="/backup"
-                  element={
-                    <PrivateRoute>
-                      <BackupRestore />
-                    </PrivateRoute>
-                  }
-                />
-                
-                <Route 
-                  path="/analise-ia"
-                  element={
-                    <PrivateRoute>
-                      <AnaliseIA />
+                      <OpenFinancePage />
                     </PrivateRoute>
                   }
                 />

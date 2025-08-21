@@ -19,9 +19,7 @@ import {
   Bell,
   Tag,
   Calendar,
-  Brain,
-  Database,
-  Target
+  Building2
 } from 'lucide-react';
 import CategoryManager from './ui/CategoryManager';
 import ReminderSystem from './ui/ReminderSystem';
@@ -78,11 +76,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/transacoes', label: 'Receitas/Despesas', icon: <DollarSign size={20} /> },
     { path: '/investimentos', label: 'Investimentos', icon: <TrendingUp size={20} /> },
     { path: '/metas', label: 'Metas de Gastos', icon: <TrendingUp size={20} /> },
-    { path: '/orcamento', label: 'Orçamento', icon: <Target size={20} /> },
     { path: '/relatorios', label: 'Relatórios', icon: <BarChart4 size={20} /> },
-    { path: '/analise-ia', label: 'Análise IA', icon: <Brain size={20} /> },
     { path: '/importacao', label: 'Importar CSV', icon: <Upload size={20} /> },
-    { path: '/backup', label: 'Backup/Restore', icon: <Database size={20} /> },
+    { path: '/openfinance', label: 'Open Finance', icon: <Building2 size={20} /> },
     { path: '/configuracoes', label: 'Configurações', icon: <Settings size={20} /> },
     { 
       path: '#categorias', 

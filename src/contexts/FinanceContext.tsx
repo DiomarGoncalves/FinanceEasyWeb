@@ -3,7 +3,6 @@ import { api } from '../services/api';
 import { useAuth } from './AuthContext';
 import { useToast } from '../components/ui/Toast';
 import { CreditCard, DollarSign, CheckCircle } from 'lucide-react';
-import { useNotifications } from '../hooks/useNotifications';
 
 interface DashboardData {
   mes: number;
@@ -118,7 +117,6 @@ const FinanceContext = createContext<FinanceContextData>({} as FinanceContextDat
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   const { showToast } = useToast();
-  const { checkPendingNotifications } = useNotifications();
   
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [historico, setHistorico] = useState<HistoricoData | null>(null);
@@ -134,13 +132,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       loadDashboard();
       loadCartoes();
       loadConfiguracoes();
-      
-      // Verificar notificações a cada 5 minutos
-      const notificationInterval = setInterval(() => {
-        checkPendingNotifications();
-      }, 5 * 60 * 1000);
-
-      return () => clearInterval(notificationInterval);
     }
   }, [isAuthenticated]);
 
