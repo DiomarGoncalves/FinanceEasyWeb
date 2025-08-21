@@ -27,17 +27,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const token = localStorage.getItem('@FinanceApp:token');
     
     if (token) {
-      console.log('Token encontrado, verificando validade...');
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       // Buscar informações do usuário
       api.get('/configuracoes')
         .then(response => {
-          console.log('Usuário autenticado:', response.data);
           setUser(response.data);
         })
         .catch(() => {
-          console.log('Token inválido, removendo...');
           localStorage.removeItem('@FinanceApp:token');
           api.defaults.headers.common['Authorization'] = '';
         })
@@ -45,7 +42,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setLoading(false);
         });
     } else {
-      console.log('Nenhum token encontrado');
       setLoading(false);
     }
   }, []);
@@ -55,7 +51,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     const { token, user } = response.data;
     
-    console.log('Login realizado com sucesso:', user);
     localStorage.setItem('@FinanceApp:token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     
@@ -67,7 +62,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     const { token, user } = response.data;
     
-    console.log('Registro realizado com sucesso:', user);
     localStorage.setItem('@FinanceApp:token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     
@@ -75,7 +69,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = (): void => {
-    console.log('Fazendo logout...');
     localStorage.removeItem('@FinanceApp:token');
     api.defaults.headers.common['Authorization'] = '';
     setUser(null);

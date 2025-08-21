@@ -40,7 +40,7 @@ router.get('/', async (req, res) => {
 
 // Criar nova meta
 router.post('/', async (req, res) => {
-  const { categoria, valor_limite, mes, ano, descricao, data_inicio, data_fim, cor } = req.body;
+  const { categoria, valor_limite, mes, ano } = req.body;
   const userId = req.user.id;
   
   try {
@@ -53,8 +53,8 @@ router.post('/', async (req, res) => {
     }
     
     const result = await db.query(
-      'INSERT INTO metas_gastos (userId, categoria, valor_limite, mes, ano, descricao, data_inicio, data_fim, cor) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
-      [userId, categoria, valor_limite, mes, ano, descricao, data_inicio, data_fim, cor]
+      'INSERT INTO metas_gastos (userId, categoria, valor_limite, mes, ano) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [userId, categoria, valor_limite, mes, ano]
     );
     
     res.status(201).json(result.rows[0]);
@@ -69,7 +69,7 @@ router.post('/', async (req, res) => {
 
 // Atualizar meta
 router.put('/:id', async (req, res) => {
-  const { valor_limite, ativo, descricao, data_inicio, data_fim, cor } = req.body;
+  const { valor_limite, ativo } = req.body;
   const userId = req.user.id;
   const metaId = req.params.id;
   
@@ -84,75 +84,14 @@ router.put('/:id', async (req, res) => {
     }
     
     const result = await db.query(
-      'UPDATE metas_gastos SET valor_limite = COALESCE($1, valor_limite), ativo = COALESCE($2, ativo), descricao = COALESCE($3, descricao), data_inicio = COALESCE($4, data_inicio), data_fim = COALESCE($5, data_fim), cor = COALESCE($6, cor) WHERE id = $7 AND userId = $8 RETURNING *',
-      [valor_limite, ativo, descricao, data_inicio, data_fim, cor, metaId, userId]
+      'UPDATE metas_gastos SET valor_limite = COALESCE($1, valor_limite), ativo = COALESCE($2, ativo) WHERE id = $3 AND userId = $4 RETURNING *',
+      [valor_limite, ativo, metaId, userId]
     );
     
     res.json(result.rows[0]);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao atualizar meta' });
-  }
-});
-
-// Criar aporte para uma meta
-router.post('/:id/aportes', async (req, res) => {
-  const { valor, descricao, data } = req.body;
-  const userId = req.user.id;
-  const metaId = req.params.id;
-  
-  try {
-    // Verificar se a meta pertence ao usuário
-    const metaCheck = await db.query(
-      'SELECT * FROM metas_gastos WHERE id = $1 AND userId = $2',
-      [metaId, userId]
-    );
-    
-    if (metaCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Meta não encontrada' });
-    }
-    
-    if (!valor || parseFloat(valor) <= 0) {
-      return res.status(400).json({ error: 'Valor do aporte deve ser maior que zero' });
-    }
-    
-    const result = await db.query(
-      'INSERT INTO aportes_metas (meta_id, valor, descricao, data) VALUES ($1, $2, $3, $4) RETURNING *',
-      [metaId, valor, descricao, data || new Date().toISOString().split('T')[0]]
-    );
-    
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao criar aporte' });
-  }
-});
-
-// Obter aportes de uma meta
-router.get('/:id/aportes', async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const metaId = req.params.id;
-    
-    // Verificar se a meta pertence ao usuário
-    const metaCheck = await db.query(
-      'SELECT * FROM metas_gastos WHERE id = $1 AND userId = $2',
-      [metaId, userId]
-    );
-    
-    if (metaCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Meta não encontrada' });
-    }
-    
-    const result = await db.query(
-      'SELECT * FROM aportes_metas WHERE meta_id = $1 ORDER BY data DESC',
-      [metaId]
-    );
-    
-    res.json(result.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao buscar aportes' });
   }
 });
 

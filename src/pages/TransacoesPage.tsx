@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useFinance } from "../contexts/FinanceContext";
 import { useToast } from "../components/ui/Toast";
 import SearchInput from "../components/ui/SearchInput";
-import FilterPanel from "../components/ui/FilterPanel";
+import AdvancedFilters from "../components/ui/AdvancedFilters";
 import ExportButton from "../components/ui/ExportButton";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { TableSkeleton } from "../components/ui/SkeletonLoader";
+import { ErrorHandler, withRetry } from "../utils/errorHandler";
+import { Validator, commonSchemas } from "../utils/validation";
 import {
   Plus,
   Filter,
@@ -14,7 +16,8 @@ import {
   ArrowDownCircle,
   Trash2,
   AlertCircle,
-  Edit, // ADICIONADO
+  Edit,
+  Settings
 } from "lucide-react";
 import { api } from "../services/api";
 
@@ -43,6 +46,8 @@ const TransacoesPage: React.FC = () => {
     item: any;
     type: 'despesa' | 'receita';
   }>({ isOpen: false, item: null, type: 'despesa' });
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<any>({});
 
   // Form states
   const [descricao, setDescricao] = useState("");
@@ -59,11 +64,11 @@ const TransacoesPage: React.FC = () => {
   // Filter states
   const [mesFilter, setMesFilter] = useState(new Date().getMonth() + 1);
   const [anoFilter, setAnoFilter] = useState(new Date().getFullYear());
-  const [categoriaFilter, setCategoriaFilter] = useState("");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
+  const [categorias, setCategorias] = useState<any[]>([]);
   // Novo estado para edição
   const [editId, setEditId] = useState<number | null>(null);
 
@@ -72,6 +77,7 @@ const TransacoesPage: React.FC = () => {
       try {
         setDataLoading(true);
         await loadCartoes();
+        await loadCategorias();
         await loadData();
       } catch (error) {
         showToast({
@@ -85,14 +91,27 @@ const TransacoesPage: React.FC = () => {
     };
     
     initData();
-  }, [mesFilter, anoFilter, categoriaFilter]);
+  }, [mesFilter, anoFilter, advancedFilters]);
+
+  const loadCategorias = async () => {
+    try {
+      const response = await withRetry(() => api.get('/categorias'));
+      setCategorias(response.data);
+    } catch (error) {
+      const appError = ErrorHandler.handle(error);
+      showToast({
+        type: 'error',
+        title: 'Erro ao carregar categorias',
+        message: appError.message
+      });
+    }
+  };
 
   const loadData = () => {
-    const filters = {
+    const filters = Object.assign({
       mes: mesFilter,
       ano: anoFilter,
-      categoria: categoriaFilter || undefined,
-    };
+    }, advancedFilters);
 
     loadDespesas(filters);
     loadReceitas(filters);
@@ -101,6 +120,23 @@ const TransacoesPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Validação usando o sistema de validação
+    const validationSchema = {
+      descricao: { required: true, minLength: 2, maxLength: 255 },
+      valor: { required: true, ...commonSchemas.currency },
+      data: { required: true, ...commonSchemas.date },
+      categoria: { required: true }
+    };
+
+    const formData = { descricao, valor: parseFloat(valor), data, categoria };
+    const validation = Validator.validate(formData, validationSchema);
+
+    if (!validation.isValid) {
+      const firstError = Object.values(validation.errors)[0];
+      setError(firstError);
+      return;
+    }
 
     if (!descricao || !valor || !data || !categoria) {
       setError("Preencha todos os campos obrigatórios");
@@ -259,15 +295,13 @@ const TransacoesPage: React.FC = () => {
         title: 'Sucesso!',
         message: `${activeTab === 'despesas' ? 'Despesa' : 'Receita'} salva com sucesso`
       });
-    } catch (error: any) {
-      setError(
-        error.response?.data?.error ||
-          `Erro ao salvar ${activeTab === "despesas" ? "despesa" : "receita"}`
-      );
+    } catch (error) {
+      const appError = ErrorHandler.handle(error);
+      setError(appError.message);
       showToast({
         type: 'error',
         title: 'Erro ao salvar',
-        message: error.response?.data?.error || 'Ocorreu um erro inesperado'
+        message: appError.message
       });
     } finally {
       setLoading(false);
@@ -520,36 +554,26 @@ const TransacoesPage: React.FC = () => {
   };
 
   // Filtrar dados baseado na busca
-  const filteredData = (activeTab === "despesas" ? despesas : receitas).filter(item =>
-    item.descricao.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.categoria.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredData = (activeTab === "despesas" ? despesas : receitas).filter(item => {
+    const matchesSearch = item.descricao.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.categoria.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Aplicar filtros avançados
+    if (advancedFilters.valorMin && item.valor < parseFloat(advancedFilters.valorMin)) return false;
+    if (advancedFilters.valorMax && item.valor > parseFloat(advancedFilters.valorMax)) return false;
+    if (advancedFilters.dataInicio && item.data < advancedFilters.dataInicio) return false;
+    if (advancedFilters.dataFim && item.data > advancedFilters.dataFim) return false;
+    if (advancedFilters.categoria && item.categoria !== advancedFilters.categoria) return false;
+    if (advancedFilters.status && item.status !== advancedFilters.status) return false;
+    if (advancedFilters.tipo && item.tipo !== advancedFilters.tipo) return false;
+    if (advancedFilters.cartaoId && item.cartaoId !== parseInt(advancedFilters.cartaoId)) return false;
+    if (advancedFilters.descricao && !item.descricao.toLowerCase().includes(advancedFilters.descricao.toLowerCase())) return false;
 
-  // Configuração dos filtros
-  const filterOptions = [
-    {
-      key: 'categoria',
-      label: 'Categoria',
-      type: 'select' as const,
-      options: (activeTab === 'despesas' ? categoriasDespesas : categoriasReceitas).map(cat => ({
-        value: cat,
-        label: cat
-      }))
-    }
-  ];
+    return matchesSearch;
+  });
 
-  const filterValues = {
-    categoria: categoriaFilter
-  };
-
-  const handleFilterChange = (key: string, value: any) => {
-    if (key === 'categoria') {
-      setCategoriaFilter(value);
-    }
-  };
-
-  const handleFilterClear = () => {
-    setCategoriaFilter('');
+  const handleAdvancedFiltersApply = (filters: any) => {
+    setAdvancedFilters(filters);
   };
 
   return (
@@ -562,6 +586,23 @@ const TransacoesPage: React.FC = () => {
             data={filteredData}
             filename={`${activeTab}-${mesFilter}-${anoFilter}`}
           />
+
+          <button
+            onClick={() => setShowAdvancedFilters(true)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+              Object.keys(advancedFilters).length > 0
+                ? 'bg-primary-50 border border-primary-200 text-primary-700 shadow-medium'
+                : 'bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 shadow-soft'
+            }`}
+          >
+            <Settings size={20} />
+            Filtros Avançados
+            {Object.keys(advancedFilters).length > 0 && (
+              <span className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                {Object.keys(advancedFilters).length}
+              </span>
+            )}
+          </button>
 
           <button
             onClick={() => setShowForm(!showForm)}
@@ -629,12 +670,6 @@ const TransacoesPage: React.FC = () => {
           onSearch={setSearchQuery}
           className="flex-1"
         />
-        <FilterPanel
-          filters={filterOptions}
-          values={filterValues}
-          onChange={handleFilterChange}
-          onClear={handleFilterClear}
-        />
       </div>
 
       {showForm && (
@@ -698,12 +733,11 @@ const TransacoesPage: React.FC = () => {
                   required
                 >
                   <option value="">Selecione...</option>
-                  {(activeTab === "despesas"
-                    ? categoriasDespesas
-                    : categoriasReceitas
-                  ).map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                  {categorias
+                    .filter(cat => cat.tipo === (activeTab === 'despesas' ? 'despesa' : 'receita'))
+                    .map((cat) => (
+                    <option key={cat.id} value={cat.nome}>
+                      {cat.icone} {cat.nome}
                     </option>
                   ))}
                 </select>
@@ -993,6 +1027,15 @@ const TransacoesPage: React.FC = () => {
         message={`Tem certeza que deseja excluir esta ${confirmDialog.type}? Esta ação não pode ser desfeita.`}
         confirmText="Excluir"
         type="danger"
+      />
+
+      {/* Filtros Avançados */}
+      <AdvancedFilters
+        isOpen={showAdvancedFilters}
+        onClose={() => setShowAdvancedFilters(false)}
+        onApply={handleAdvancedFiltersApply}
+        cartoes={cartoes}
+        categorias={categorias}
       />
     </div>
   );

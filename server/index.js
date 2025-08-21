@@ -15,6 +15,11 @@ import dashboardRoutes from './routes/dashboard.js';
 import importRoutes from './routes/import.js';
 import metasRoutes from './routes/metas.js';
 import notificacoesRoutes from './routes/notificacoes.js';
+import categoriasRoutes from './routes/categorias.js';
+import lembretesRoutes from './routes/lembretes.js';
+import orcamentoRoutes from './routes/orcamento.js';
+import backupRoutes from './routes/backup.js';
+import analiseIARoutes from './routes/analise-ia.js';
 import { authenticateToken } from './middleware/auth.js';
 
 dotenv.config();
@@ -48,6 +53,11 @@ app.use('/api/configuracoes', authenticateToken, configuracaoRoutes);
 app.use('/api/import', authenticateToken, importRoutes);
 app.use('/api/metas', authenticateToken, metasRoutes);
 app.use('/api/notificacoes', authenticateToken, notificacoesRoutes);
+app.use('/api/categorias', authenticateToken, categoriasRoutes);
+app.use('/api/lembretes', authenticateToken, lembretesRoutes);
+app.use('/api/orcamento', authenticateToken, orcamentoRoutes);
+app.use('/api/backup', authenticateToken, backupRoutes);
+app.use('/api/analise-ia', authenticateToken, analiseIARoutes);
 
 // Teste
 app.get('/api/test', (req, res) => {

@@ -7,7 +7,7 @@ const { Pool } = pg;
 
 // Create a new pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://financeasy_owner:npg_qre6KP8bJnVg@ep-solitary-wind-acspapl1-pooler.sa-east-1.aws.neon.tech/financeasy?sslmode=require&channel_binding=require',
+  connectionString: process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_AWG3bkOE2cSi@ep-plain-dawn-acz8jya6-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
@@ -118,27 +118,11 @@ const initDatabase = async () => {
         userId INTEGER REFERENCES users(id) ON DELETE CASCADE,
         categoria VARCHAR(50) NOT NULL,
         valor_limite DECIMAL(10, 2) NOT NULL,
-        descricao TEXT,
-        data_inicio DATE,
-        data_fim DATE,
-        cor VARCHAR(7) DEFAULT '#147361',
         mes INTEGER NOT NULL,
         ano INTEGER NOT NULL,
         ativo BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(userId, categoria, mes, ano)
-      );
-    `);
-
-    // Tabela de aportes para metas
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS aportes_metas (
-        id SERIAL PRIMARY KEY,
-        meta_id INTEGER REFERENCES metas_gastos(id) ON DELETE CASCADE,
-        valor DECIMAL(10, 2) NOT NULL,
-        descricao TEXT,
-        data DATE NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
@@ -155,6 +139,52 @@ const initDatabase = async () => {
       );
     `);
 
+    // Tabela de categorias personalizadas
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS categorias (
+        id SERIAL PRIMARY KEY,
+        userId INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        nome VARCHAR(100) NOT NULL,
+        tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('receita', 'despesa')),
+        cor VARCHAR(7) DEFAULT '#3B82F6',
+        icone VARCHAR(10) DEFAULT '💰',
+        ativo BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(userId, nome, tipo)
+      );
+    `);
+
+    // Tabela de lembretes
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS lembretes (
+        id SERIAL PRIMARY KEY,
+        userId INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        titulo VARCHAR(255) NOT NULL,
+        descricao TEXT,
+        data_vencimento TIMESTAMP NOT NULL,
+        tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('despesa', 'receita', 'fatura', 'meta')),
+        ativo BOOLEAN DEFAULT TRUE,
+        notificado BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Tabela de orçamento
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS orcamento (
+        id SERIAL PRIMARY KEY,
+        userId INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        categoria VARCHAR(100) NOT NULL,
+        valor_planejado DECIMAL(10, 2) NOT NULL,
+        tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('receita', 'despesa')),
+        mes INTEGER NOT NULL,
+        ano INTEGER NOT NULL,
+        ativo BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(userId, categoria, tipo, mes, ano)
+      );
+    `);
+
     await client.query('COMMIT');
     console.log('Database initialized successfully');
   } catch (e) {
@@ -166,18 +196,7 @@ const initDatabase = async () => {
 };
 
 // DB query helper function
-const query = async (text, params) => {
-  const client = await pool.connect();
-  try {
-    const result = await client.query(text, params);
-    return result;
-  } catch (error) {
-    console.error('Database query error:', error);
-    throw error;
-  } finally {
-    client.release();
-  }
-};
+const query = (text, params) => pool.query(text, params);
 
 export default {
   query,

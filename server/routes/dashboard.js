@@ -7,19 +7,12 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const userId = req.user.id;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
-    }
-    
     const { mes, ano } = req.query;
     
     // Se mês e ano não foram informados, usar mês e ano atuais
     const dataAtual = new Date();
     const mesAtual = mes || dataAtual.getMonth() + 1;
     const anoAtual = ano || dataAtual.getFullYear();
-    
-    console.log(`Dashboard request - User: ${userId}, Mes: ${mesAtual}, Ano: ${anoAtual}`);
     
     // Buscar total de receitas do mês
     const receitasResult = await db.query(
@@ -183,11 +176,6 @@ router.get('/', async (req, res) => {
 router.get('/alertas', async (req, res) => {
   try {
     const userId = req.user.id;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
-    }
-    
     const alertas = [];
     
     // Verificar despesas vencidas
@@ -270,18 +258,11 @@ router.get('/alertas', async (req, res) => {
 router.get('/historico', async (req, res) => {
   try {
     const userId = req.user.id;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
-    }
-    
     const { ano } = req.query;
     
     // Se ano não foi informado, usar ano atual
     const dataAtual = new Date();
     const anoAtual = ano || dataAtual.getFullYear();
-    
-    console.log(`Histórico request - User: ${userId}, Ano: ${anoAtual}`);
     
     // Buscar totais de receitas por mês
     const receitasMensaisResult = await db.query(

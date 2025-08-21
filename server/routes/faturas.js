@@ -1,38 +1,24 @@
 import express from 'express';
 import db from '../db/index.js';
+import { authenticateToken } from '../middleware/auth.js'; // Corrija o import
 
 const router = express.Router();
+
+// Aplica o middleware de autenticação a todas as rotas deste router
+router.use(authenticateToken);
 
 // Obter todas as faturas do usuário
 router.get('/', async (req, res) => {
   try {
     const userId = req.user.id;
-    const { mes, ano, cartaoId } = req.query;
-    
-    let query = `
-      SELECT f.*, c.nome as cartao_nome, c.numero as cartao_numero
-      FROM faturas f
-      JOIN cartoes c ON c.id = f.cartaoId
-      WHERE f.userId = $1
-    `;
-    let params = [userId];
-    
-    if (mes && ano) {
-      query += ' AND f.mes_referencia = $2 AND f.ano_referencia = $3';
-      params.push(mes, ano);
-      
-      if (cartaoId) {
-        query += ' AND f.cartaoId = $4';
-        params.push(cartaoId);
-      }
-    } else if (cartaoId) {
-      query += ' AND f.cartaoId = $2';
-      params.push(cartaoId);
-    }
-    
-    query += ' ORDER BY f.ano_referencia DESC, f.mes_referencia DESC';
-    
-    const result = await db.query(query, params);
+    const result = await db.query(
+      `SELECT f.*, c.nome as cartao_nome 
+       FROM faturas f 
+       JOIN cartoes c ON f.cartaoId = c.id 
+       WHERE f.userId = $1 
+       ORDER BY f.ano_referencia DESC, f.mes_referencia DESC`,
+      [userId]
+    );
     
     res.json(result.rows);
   } catch (error) {
@@ -58,10 +44,10 @@ router.get('/cartao/:cartaoId', async (req, res) => {
     }
     
     const result = await db.query(
-      `SELECT f.*, c.nome as cartao_nome, c.numero as cartao_numero
-       FROM faturas f
-       JOIN cartoes c ON c.id = f.cartaoId
-       WHERE f.cartaoId = $1 AND f.userId = $2
+      `SELECT f.*, c.nome as cartao_nome 
+       FROM faturas f 
+       JOIN cartoes c ON f.cartaoId = c.id 
+       WHERE f.cartaoId = $1 AND f.userId = $2 
        ORDER BY f.ano_referencia DESC, f.mes_referencia DESC`,
       [cartaoId, userId]
     );
@@ -81,9 +67,9 @@ router.get('/:id', async (req, res) => {
     
     // Buscar fatura
     const faturaResult = await db.query(
-      `SELECT f.*, c.nome as cartao_nome, c.numero as cartao_numero
-       FROM faturas f
-       JOIN cartoes c ON c.id = f.cartaoId
+      `SELECT f.*, c.nome as cartao_nome 
+       FROM faturas f 
+       JOIN cartoes c ON f.cartaoId = c.id 
        WHERE f.id = $1 AND f.userId = $2`,
       [faturaId, userId]
     );
@@ -114,7 +100,16 @@ router.post('/', async (req, res) => {
   const userId = req.user.id;
   
   try {
-    if (!cartaoId || !mes_referencia || !ano_referencia || valor_total === undefined) {
+    // Validar dados
+    // Corrigido: valor_total pode ser zero, então use checagem explícita de undefined/null
+    if (
+      !cartaoId ||
+      !mes_referencia ||
+      !ano_referencia ||
+      valor_total === undefined ||
+      valor_total === null ||
+      !status
+    ) {
       return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
     }
     
@@ -128,19 +123,19 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ error: 'Cartão não encontrado' });
     }
     
-    // Verificar se já existe fatura para este cartão no período
-    const faturaExistente = await db.query(
+    // Verificar se já existe fatura para este mês/ano/cartão
+    const faturaCheck = await db.query(
       'SELECT * FROM faturas WHERE cartaoId = $1 AND mes_referencia = $2 AND ano_referencia = $3 AND userId = $4',
       [cartaoId, mes_referencia, ano_referencia, userId]
     );
     
-    if (faturaExistente.rows.length > 0) {
-      return res.status(400).json({ error: 'Já existe uma fatura para este cartão no período' });
+    if (faturaCheck.rows.length > 0) {
+      return res.status(400).json({ error: 'Já existe uma fatura para este mês/ano' });
     }
     
     const result = await db.query(
       'INSERT INTO faturas (userId, cartaoId, mes_referencia, ano_referencia, valor_total, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [userId, cartaoId, mes_referencia, ano_referencia, valor_total || 0, status || 'aberta']
+      [userId, cartaoId, mes_referencia, ano_referencia, valor_total, status]
     );
     
     res.status(201).json(result.rows[0]);
@@ -169,7 +164,7 @@ router.put('/:id', async (req, res) => {
     
     // Atualizar fatura
     const result = await db.query(
-      'UPDATE faturas SET valor_total = COALESCE($1, valor_total), status = COALESCE($2, status) WHERE id = $3 AND userId = $4 RETURNING *',
+      'UPDATE faturas SET valor_total = $1, status = $2 WHERE id = $3 AND userId = $4 RETURNING *',
       [valor_total, status, faturaId, userId]
     );
     
@@ -177,49 +172,6 @@ router.put('/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao atualizar fatura' });
-  }
-});
-
-// Pagar fatura (parcial ou total)
-router.post('/:id/pagar', async (req, res) => {
-  const { valor_pagamento } = req.body;
-  const userId = req.user.id;
-  const faturaId = req.params.id;
-  
-  try {
-    if (!valor_pagamento || parseFloat(valor_pagamento) <= 0) {
-      return res.status(400).json({ error: 'Valor de pagamento inválido' });
-    }
-    
-    // Verificar se a fatura pertence ao usuário
-    const faturaCheck = await db.query(
-      'SELECT * FROM faturas WHERE id = $1 AND userId = $2',
-      [faturaId, userId]
-    );
-    
-    if (faturaCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Fatura não encontrada' });
-    }
-    
-    const fatura = faturaCheck.rows[0];
-    const valorPagamento = parseFloat(valor_pagamento);
-    const novoValor = Math.max(0, parseFloat(fatura.valor_total) - valorPagamento);
-    const novoStatus = novoValor === 0 ? 'paga' : 'aberta';
-    
-    // Atualizar fatura
-    const result = await db.query(
-      'UPDATE faturas SET valor_total = $1, status = $2 WHERE id = $3 AND userId = $4 RETURNING *',
-      [novoValor, novoStatus, faturaId, userId]
-    );
-    
-    res.json({
-      message: 'Pagamento realizado com sucesso',
-      fatura: result.rows[0],
-      valor_pago: valorPagamento
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erro ao processar pagamento' });
   }
 });
 
@@ -239,12 +191,7 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Fatura não encontrada' });
     }
     
-    // Excluir fatura (as despesas relacionadas terão faturaId definido como NULL)
-    await db.query(
-      'UPDATE despesas SET faturaId = NULL WHERE faturaId = $1 AND userId = $2',
-      [faturaId, userId]
-    );
-    
+    // Excluir fatura
     await db.query(
       'DELETE FROM faturas WHERE id = $1 AND userId = $2',
       [faturaId, userId]

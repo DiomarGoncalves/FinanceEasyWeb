@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { CreditCard, ChevronDown, ChevronUp, Calendar, DollarSign, XCircle, Loader2, Plus, Edit, Trash2, AlertCircle } from 'lucide-react';
+import { CreditCard, ChevronDown, ChevronUp, Calendar, DollarSign, XCircle, Loader2 } from 'lucide-react';
 import dayjs from 'dayjs';
 import { api } from '../services/api';
-import { useToast } from '../components/ui/Toast';
 
 const meses = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -28,15 +27,6 @@ const Faturas: React.FC = () => {
   const [ano, setAno] = useState(getCurrentYear());
   const [pagamentoModal, setPagamentoModal] = useState<{ open: boolean, fatura: any | null }>({ open: false, fatura: null });
   const [valorPagamento, setValorPagamento] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newFatura, setNewFatura] = useState({
-    cartaoId: '',
-    mes_referencia: getCurrentMonth(),
-    ano_referencia: getCurrentYear(),
-    valor_total: '',
-    status: 'aberta'
-  });
-  const { showToast } = useToast();
 
   // Carregar cartões e faturas
   useEffect(() => {
@@ -46,100 +36,23 @@ const Faturas: React.FC = () => {
       try {
         const [cartoesRes, faturasRes] = await Promise.all([
           api.get('/cartoes'),
-          api.get(`/faturas?mes=${mes}&ano=${ano}`)
+          api.get('/faturas')
         ]);
         setCartoes(cartoesRes.data);
         setFaturas(faturasRes.data);
       } catch (e: any) {
         setError(e.response?.data?.error || 'Erro ao carregar cartões/faturas');
-        showToast({
-          type: 'error',
-          title: 'Erro ao carregar dados',
-          message: e.response?.data?.error || 'Erro ao carregar cartões/faturas'
-        });
       } finally {
         setLoading(false);
       }
     };
     fetchCartoesEFaturas();
-  }, [mes, ano]);
-
-  // Criar nova fatura
-  const handleCreateFatura = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newFatura.cartaoId || !newFatura.valor_total) {
-      setError('Preencha todos os campos obrigatórios');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await api.post('/faturas', {
-        cartaoId: parseInt(newFatura.cartaoId),
-        mes_referencia: newFatura.mes_referencia,
-        ano_referencia: newFatura.ano_referencia,
-        valor_total: parseFloat(newFatura.valor_total),
-        status: newFatura.status
-      });
-      
-      showToast({
-        type: 'success',
-        title: 'Fatura criada!',
-        message: 'Nova fatura criada com sucesso'
-      });
-      
-      setShowCreateModal(false);
-      setNewFatura({
-        cartaoId: '',
-        mes_referencia: getCurrentMonth(),
-        ano_referencia: getCurrentYear(),
-        valor_total: '',
-        status: 'aberta'
-      });
-      
-      // Recarregar faturas
-      const response = await api.get(`/faturas?mes=${mes}&ano=${ano}`);
-      setFaturas(response.data);
-    } catch (e: any) {
-      setError(e.response?.data?.error || 'Erro ao criar fatura');
-      showToast({
-        type: 'error',
-        title: 'Erro ao criar fatura',
-        message: e.response?.data?.error || 'Erro ao criar fatura'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Excluir fatura
-  const handleDeleteFatura = async (faturaId: number) => {
-    if (!window.confirm('Tem certeza que deseja excluir esta fatura?')) {
-      return;
-    }
-
-    try {
-      await api.delete(`/faturas/${faturaId}`);
-      showToast({
-        type: 'success',
-        title: 'Fatura excluída!',
-        message: 'Fatura excluída com sucesso'
-      });
-      
-      // Recarregar faturas
-      const response = await api.get(`/faturas?mes=${mes}&ano=${ano}`);
-      setFaturas(response.data);
-    } catch (e: any) {
-      showToast({
-        type: 'error',
-        title: 'Erro ao excluir fatura',
-        message: e.response?.data?.error || 'Erro ao excluir fatura'
-      });
-    }
-  };
+  }, []);
 
   // Filtrar faturas por mês/ano
-  const faturasFiltradas = faturas;
+  const faturasFiltradas = faturas.filter(f =>
+    f.mes_referencia === mes && f.ano_referencia === ano
+  );
 
   // Agrupar por cartão
   const faturasPorCartao = cartoes.map(cartao => ({
@@ -198,19 +111,9 @@ const Faturas: React.FC = () => {
             : f
         )
       );
-      showToast({
-        type: 'success',
-        title: 'Pagamento realizado!',
-        message: `Pagamento de ${formatCurrency(valor)} realizado com sucesso`
-      });
       setPagamentoModal({ open: false, fatura: null });
     } catch (e: any) {
       setError(e.response?.data?.error || 'Erro ao pagar fatura');
-      showToast({
-        type: 'error',
-        title: 'Erro no pagamento',
-        message: e.response?.data?.error || 'Erro ao pagar fatura'
-      });
     } finally {
       setLoadingFatura(null);
     }
@@ -226,18 +129,9 @@ const Faturas: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <CreditCard size={24} /> Faturas dos Cartões
-        </h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-xl hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 transform hover:scale-105 shadow-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-        >
-          <Plus size={20} />
-          Nova Fatura
-        </button>
-      </div>
+      <h1 className="text-2xl font-bold mb-4 flex items-center gap-2">
+        <CreditCard size={24} /> Faturas dos Cartões
+      </h1>
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-4 mb-6">
@@ -273,104 +167,6 @@ const Faturas: React.FC = () => {
       )}
       {success && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-700">{success}</div>
-      )}
-
-      {/* Modal de Nova Fatura */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-              onClick={() => setShowCreateModal(false)}
-            >
-              <XCircle size={24} />
-            </button>
-            <h2 className="text-xl font-semibold mb-4">Nova Fatura</h2>
-            <form onSubmit={handleCreateFatura} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Cartão</label>
-                <select
-                  value={newFatura.cartaoId}
-                  onChange={(e) => setNewFatura({...newFatura, cartaoId: e.target.value})}
-                  className="w-full border border-neutral-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
-                  required
-                >
-                  <option value="">Selecione um cartão</option>
-                  {cartoes.map(cartao => (
-                    <option key={cartao.id} value={cartao.id}>
-                      {cartao.nome} - **** {cartao.numero}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Mês</label>
-                  <select
-                    value={newFatura.mes_referencia}
-                    onChange={(e) => setNewFatura({...newFatura, mes_referencia: Number(e.target.value)})}
-                    className="w-full border border-neutral-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
-                  >
-                    {meses.map((m, idx) => (
-                      <option key={m} value={idx + 1}>{m}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Ano</label>
-                  <select
-                    value={newFatura.ano_referencia}
-                    onChange={(e) => setNewFatura({...newFatura, ano_referencia: Number(e.target.value)})}
-                    className="w-full border border-neutral-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
-                  >
-                    {[getCurrentYear() - 1, getCurrentYear(), getCurrentYear() + 1].map(a => (
-                      <option key={a} value={a}>{a}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Valor Total</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={newFatura.valor_total}
-                  onChange={(e) => setNewFatura({...newFatura, valor_total: e.target.value})}
-                  className="w-full border border-neutral-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
-                  placeholder="0,00"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Status</label>
-                <select
-                  value={newFatura.status}
-                  onChange={(e) => setNewFatura({...newFatura, status: e.target.value})}
-                  className="w-full border border-neutral-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
-                >
-                  <option value="aberta">Aberta</option>
-                  <option value="paga">Paga</option>
-                  <option value="vencida">Vencida</option>
-                </select>
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full py-3 rounded-xl bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 transform hover:scale-105 shadow-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                  loading ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
-              >
-                {loading ? 'Criando...' : 'Criar Fatura'}
-              </button>
-            </form>
-            {error && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-                {error}
-              </div>
-            )}
-          </div>
-        </div>
       )}
 
       {/* Loading */}
@@ -440,19 +236,6 @@ const Faturas: React.FC = () => {
                               }`}
                             >
                               <DollarSign size={16} /> Pagar
-                            </button>
-                            <button
-                              onClick={() => handleDeleteFatura(fatura.id)}
-                              className="flex items-center gap-1 px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700 transition-colors text-sm"
-                              title="Excluir fatura"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteFatura(fatura.id)}
-                              className="flex items-center gap-1 px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700 transition-colors text-sm"
-                            >
-                              <Trash2 size={16} /> Excluir
                             </button>
                           </div>
                         </div>
@@ -530,31 +313,15 @@ const Faturas: React.FC = () => {
                   max={pagamentoModal.fatura.valor_total}
                   value={valorPagamento}
                   onChange={e => setValorPagamento(e.target.value)}
-                  className="w-full border border-neutral-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+                  className="w-full border rounded px-3 py-2"
                   placeholder="0,00"
                   required
                 />
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setValorPagamento(String(pagamentoModal.fatura.valor_total))}
-                  className="px-3 py-2 text-sm bg-neutral-100 text-neutral-700 rounded-xl hover:bg-neutral-200 transition-all duration-200"
-                >
-                  Pagar Total
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setValorPagamento(String(pagamentoModal.fatura.valor_total / 2))}
-                  className="px-3 py-2 text-sm bg-neutral-100 text-neutral-700 rounded-xl hover:bg-neutral-200 transition-all duration-200"
-                >
-                  Pagar 50%
-                </button>
-              </div>
               <button
                 type="submit"
                 disabled={loadingFatura === pagamentoModal.fatura.id}
-                className={`w-full py-3 rounded-xl bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 transform hover:scale-105 shadow-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                className={`w-full py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors ${
                   loadingFatura === pagamentoModal.fatura.id ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               >

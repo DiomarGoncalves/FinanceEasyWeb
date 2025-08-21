@@ -21,12 +21,9 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   response => response,
   error => {
-    console.error('API Error:', error.response?.data || error.message);
-    
     if (error.response?.status === 401) {
       // Token inválido ou expirado, deslogar usuário
       localStorage.removeItem('@FinanceApp:token');
-      console.log('Token inválido, redirecionando para login');
       window.location.href = '/login';
     }
     

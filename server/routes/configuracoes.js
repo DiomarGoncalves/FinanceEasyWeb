@@ -9,23 +9,6 @@ router.get('/', async (req, res) => {
   try {
     const userId = req.user.id;
     
-    if (!userId) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
-    }
-    
-    // Buscar dados do usuário primeiro
-    const userResult = await db.query(
-      'SELECT id, nome, email FROM users WHERE id = $1',
-      [userId]
-    );
-    
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
-    }
-    
-    const user = userResult.rows[0];
-    
-    // Buscar configurações
     const result = await db.query(
       'SELECT * FROM configuracoes WHERE userId = $1',
       [userId]
@@ -38,16 +21,10 @@ router.get('/', async (req, res) => {
         [userId, false, 'claro']
       );
       
-      return res.json({
-        ...user,
-        configuracoes: defaultConfig.rows[0]
-      });
+      return res.json(defaultConfig.rows[0]);
     }
     
-    res.json({
-      ...user,
-      configuracoes: result.rows[0]
-    });
+    res.json(result.rows[0]);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erro ao buscar configurações' });
