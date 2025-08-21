@@ -1,26 +1,11 @@
 import React from 'react';
-import { CreditCard } from 'lucide-react';
 
 const LoadingScreen: React.FC = () => {
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-blue-900 text-white">
-      <div className="animate-pulse-slow">
-        <CreditCard size={64} className="mb-4" />
-      </div>
-      <h1 className="text-2xl font-semibold mb-4">FinControl</h1>
-      <div className="w-48 h-1 bg-white/20 rounded-full overflow-hidden">
-        <div className="h-full bg-white animate-[progress_1.5s_ease-in-out_infinite]" 
-             style={{width: '0%', animation: 'progress 1.5s ease-in-out infinite'}}></div>
-      </div>
-      <style>
-        {`
-          @keyframes progress {
-            0% { width: 0%; }
-            50% { width: 70%; }
-            100% { width: 100%; }
-          }
-        `}
-      </style>
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-neutral-100">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-500 mb-6"></div>
+      <h2 className="text-2xl font-bold text-neutral-800 tracking-tight">Carregando...</h2>
+      <p className="text-neutral-600 mt-2">Preparando sua experiência financeira</p>
     </div>
   );
 };
